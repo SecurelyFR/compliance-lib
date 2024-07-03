@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.25;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {SecurelyOwnableUpgradeable} from "./utils/SecurelyOwnableUpgradeable.sol";
 import {ICompliance} from "./interfaces/ICompliance.sol";
 
 /// @title Securely's Compliance Library
 /// @author Securely.id
 /// @notice This library provides tools to enforce compliance rules
 /// @dev This library provides five modifiers and a few internal functions to enforce compliance rules
-abstract contract ComplianceLib is Ownable {
+abstract contract ComplianceLib is SecurelyOwnableUpgradeable {
     /// @notice A slot for the compliance full hash of the current transaction
     /// @dev keccak256("complianceFullHash")
     uint private constant COMPLIANCE_FULL_HASH_SLOT = 0x840fa03919565360966e91147da3f37e9153b08f4a02f4c10215cb8cc973fc01;
@@ -19,11 +19,14 @@ abstract contract ComplianceLib is Ownable {
     /// @dev Multiple dapps can share the same compliance contract.
     ICompliance public compliance;
 
-    constructor() Ownable(msg.sender) {}
+    constructor() { __ComplianceLib_init(); }
+    function __ComplianceLib_init() internal onlyInitializing {
+        __SecurelyOwnable_init(msg.sender);
+    }
 
     /// @notice Sets the compliance contract address
     /// @param complianceAddress The address of the compliance contract
-    function setCompliance(address complianceAddress) external onlyOwner {
+    function setCompliance(address complianceAddress) external securelyOnlyOwner {
         compliance = ICompliance(complianceAddress);
     }
 
@@ -98,7 +101,7 @@ abstract contract ComplianceLib is Ownable {
     /// @notice Issues a verdict on a compliance when a manual approval is needed
     /// @param partialHash The partial hash of the transaction
     /// @param approved The verdict
-    function issueVerdict(bytes32 partialHash, bool approved) external onlyOwner {
+    function issueVerdict(bytes32 partialHash, bool approved) external securelyOnlyOwner {
         compliance.issueVerdict(partialHash, approved);
     }
 
