@@ -3,3 +3,4 @@
 .vscode
 artifacts/
 cache/
+dist/

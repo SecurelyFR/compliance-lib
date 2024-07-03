@@ -2,8 +2,15 @@
   "name": "@securely.id/compliance-lib",
   "description": "Secure smart contracts library for compliance in Solidity",
   "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "node build.js"
+  },
   "files": [
-    "/contracts/**/*.sol"
+    "dist",
+    "artifacts",
+    "index.js",
+    "contracts"
   ],
   "repository": {
     "type": "git",
@@ -25,9 +32,12 @@
   "homepage": "https://securely.id",
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.2",
-    "@openzeppelin/contracts-upgradeable": "^5.0.2"
+    "@openzeppelin/contracts-upgradeable": "^5.0.2",
+    "fs": "0.0.1-security",
+    "path": "^0.12.7"
   },
   "devDependencies": {
+    "browserify": "^17.0.0",
     "hardhat": "^2.22.5"
   }
 }
