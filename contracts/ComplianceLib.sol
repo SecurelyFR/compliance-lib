@@ -11,15 +11,15 @@ import {ICompliance} from "./interfaces/ICompliance.sol";
 /// @dev This library provides five modifiers and a few internal functions to enforce compliance rules
 abstract contract ComplianceLib is SecurelyOwnableUpgradeable {
     /// @notice A slot for the compliance full hash of the current transaction
-    /// @dev keccak256("complianceFullHash")
-    uint private constant COMPLIANCE_FULL_HASH_SLOT = 0x840fa03919565360966e91147da3f37e9153b08f4a02f4c10215cb8cc973fc01;
+    /// @dev keccak256(abi.encode(uint256(keccak256("securely.storage.complianceFullHash")) - 1)) & ~bytes32(uint256(0xff))
+    uint private constant COMPLIANCE_FULL_HASH_SLOT = 0x5a919f7f4e3a2bc944388bf5f328e0afbc9dd7ca9d96b2c317ca3b97d9229400;
 
     /// @notice The Securely compliance contract address. It must be set before using the library.
     /// @dev This contract is set by the owner and must implement the ICompliance interface.
     /// @dev Multiple dapps can share the same compliance contract.
     ICompliance public compliance;
 
-    constructor() { __ComplianceLib_init(); }
+    constructor() initializer { __ComplianceLib_init(); }
     function __ComplianceLib_init() internal onlyInitializing {
         __SecurelyOwnable_init(msg.sender);
     }
@@ -110,7 +110,8 @@ abstract contract ComplianceLib is SecurelyOwnableUpgradeable {
         if (currency == address(0)) {
             compliance.payFees{value: fee}(currency, fee);
         } else {
-            IERC20(currency).transferFrom(from, address(compliance), fee);
+            bool sent = IERC20(currency).transferFrom(from, address(compliance), fee);
+            require(sent, "Unable to transfer tokens");
             compliance.payFees(currency, fee);
         }
     }
