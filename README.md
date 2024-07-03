@@ -14,3 +14,9 @@ This project is maintained by [Securely](https://securely.id) with the goal of p
 You are invited to report security vulnerabilities freely at contact@securely.id. Any good-faith alert will be treated with kindness.
 
 Smart contracts are a nascent technology and carry a high level of technical risk and uncertainty. Although Securely cares very much about security, using Securely Contracts is not a substitute for a security audit.
+
+Securely Contracts is made available under the MIT License, which disclaims all warranties in relation to the project and which limits the liability of those that contribute and maintain the project, including Securely. As set out further in the Terms, you acknowledge that you are solely responsible for any use of Securely Contracts and you assume all risks associated with any such use.
+
+## License
+
+Securely Contracts is released under the [MIT License](LICENSE).

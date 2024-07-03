@@ -26,6 +26,7 @@
     "securely"
   ],
   "author": "Securely <contact@securely.id>",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/SecurelyFR/compliance-lib/issues"
   },
