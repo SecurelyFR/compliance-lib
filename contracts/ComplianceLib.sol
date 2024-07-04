@@ -7,20 +7,20 @@ import {ICompliance} from "./interfaces/ICompliance.sol";
 
 /// @title Securely's Compliance Library
 /// @author Securely.id
-/// @notice This library provides tools to enforce compliance rules
-/// @dev This library provides five modifiers and a few internal functions to enforce compliance rules
-abstract contract ComplianceLib is SecurelyOwnableUpgradeable {
+/// @notice This contract provides tools to enforce compliance rules
+/// @dev This abstract contract provides five modifiers and a few internal functions to enforce compliance rules
+abstract contract ComplianceContract is SecurelyOwnableUpgradeable {
     /// @notice A slot for the compliance full hash of the current transaction
     /// @dev keccak256(abi.encode(uint256(keccak256("securely.storage.complianceFullHash")) - 1)) & ~bytes32(uint256(0xff))
     uint private constant COMPLIANCE_FULL_HASH_SLOT = 0x5a919f7f4e3a2bc944388bf5f328e0afbc9dd7ca9d96b2c317ca3b97d9229400;
 
-    /// @notice The Securely compliance contract address. It must be set before using the library.
+    /// @notice The Securely compliance contract address. It must be set before using the modifiers.
     /// @dev This contract is set by the owner and must implement the ICompliance interface.
     /// @dev Multiple dapps can share the same compliance contract.
     ICompliance public compliance;
 
-    constructor() initializer { __ComplianceLib_init(); }
-    function __ComplianceLib_init() internal onlyInitializing {
+    constructor() initializer { __ComplianceContract_init(); }
+    function __ComplianceContract_init() internal onlyInitializing {
         __SecurelyOwnable_init(msg.sender);
     }
 
