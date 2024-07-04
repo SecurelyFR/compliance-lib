@@ -1,5 +1,5 @@
-const ComplianceLib = require('./artifacts/contracts/ComplianceLib.sol/ComplianceLib.json');
+const CompliantContract = require('./artifacts/contracts/CompliantContract.sol/CompliantContract.json');
 
 module.exports = {
-    ComplianceLib
+    CompliantContract
 };

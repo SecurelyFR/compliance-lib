@@ -6,7 +6,7 @@ import {IFeeCollector} from "./IFeeCollector.sol";
 /// @title Securely's Compliance interface
 /// @author Securely.id
 /// @notice Simplified Compliance interface for compliance checks
-/// @dev This interface is used by the ComplianceLib to interact with Securely's Compliance contract
+/// @dev This interface is used by the CompliantContract to interact with Securely's Compliance contract
 /// @dev A partial hash is a hash of all the different parameters of a compliant transaction. Hash is replayable.
 /// @dev A full hash is a truly unique hash, that combines the partial hash and the timestamp at which the compliance was registered. Used in events only, for easy compliance history tracking.
 interface ICompliance is IFeeCollector {
