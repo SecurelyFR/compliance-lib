@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8;
 
-import {CompliantContract} from "../CompliantContract.sol";
+import {CompliantContract} from "contracts/CompliantContract.sol";
 
 /// @title CompliantFunds
 /// @author Securely.id
