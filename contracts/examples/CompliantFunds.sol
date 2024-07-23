@@ -25,7 +25,7 @@ abstract contract CompliantFunds is CompliantContract {
         bytes32 complianceFullHash
     );
 
-    constructor() {
+    constructor(address compliance) CompliantContract(compliance) {
         defaultDestination = payable(msg.sender);
     }
 

@@ -8,6 +8,8 @@ import {CompliantFunds} from "./CompliantFunds.sol";
 /// @author Securely.id
 /// @notice This contract is a firewall ensuring all funds going in and out are compliant
 contract ComplianceFirewall is CompliantFunds {
+    constructor(address compliance) CompliantFunds(compliance) {}
+
     /// @dev Sends orphan ethers to the default destination
     receive() external payable {
         payEthers(payable(address(0)));
