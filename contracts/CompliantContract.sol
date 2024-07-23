@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8;
 
-import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {IERC20} from "./interfaces/IERC20.sol";
 import {ICompliance} from "./interfaces/ICompliance.sol";
 
 /// @title Securely's Compliance Library
