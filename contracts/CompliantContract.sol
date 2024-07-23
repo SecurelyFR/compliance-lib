@@ -18,17 +18,27 @@ abstract contract CompliantContract {
     /// @dev It is reset at the end of each transaction
     bytes32 internal complianceFullHash;
 
+    bool private _enable = true;
+
     constructor(address compliance_) { __CompliantContract_init(compliance_); }
     function __CompliantContract_init(address compliance_) internal {
         require(address(compliance) == address(0), "Already initialized");
         compliance = ICompliance(compliance_);
     }
 
+    /// @notice A modifier to enable or disable compliance
+    /// @param enable true to enable compliance, false to disable it
+    /// @dev If not used, the compliance is enabled by default
+    modifier enableCompliance(bool enable) {
+        _enable = enable;
+        _;
+        _enable = true;
+    }
+
     /// @notice A modifier to require compliance for a generic call
     /// @param value The value parameter associated to the transaction
     /// @param data An optional data parameter associated to the transaction
-    /// @param enable A boolean to enable or disable the compliance check. Useful for dynamic compliance checking
-    modifier requiresGenericCallCompliance         (                                         uint256 value, bytes memory data, bool enable) { if (enable) { requireCompliance(compliance.computeGenericCallPartialHash          (block.chainid, msg.sig, msg.sender,      value, data));                                   } _; complianceFullHash = 0; }
+    modifier requiresGenericCallCompliance         (                                         uint256 value, bytes memory data) { if (_enable) { requireCompliance(compliance.computeGenericCallPartialHash          (block.chainid, msg.sig, msg.sender,      value, data));                                   } _; complianceFullHash = 0; }
 
     /// @notice A modifier to require compliance for a native Eth transfer
     /// @param from The sender of funds. Not necessarily the msg.sender of the transaction
@@ -36,8 +46,7 @@ abstract contract CompliantContract {
     /// @param to The receiver of funds. Not necessarily the dapp / the receiver of the transaction
     /// @dev The to parameter is used for address screening purposes
     /// @param value The value parameter associated to the transaction
-    /// @param enable A boolean to enable or disable the compliance check. Useful for dynamic compliance checking
-    modifier requiresEthTransferCompliance         (address from, address to,                uint256 value,                    bool enable) { if (enable) { requireCompliance(compliance.computeEthTransferPartialHash          (block.chainid, msg.sig, from, to,        value      )); payFees(from, address(0), value); } _; complianceFullHash = 0; }
+    modifier requiresEthTransferCompliance         (address from, address to,                uint256 value                   ) { if (_enable) { requireCompliance(compliance.computeEthTransferPartialHash          (block.chainid, msg.sig, from, to,        value      )); payFees(from, address(0), value); } _; complianceFullHash = 0; }
 
     /// @notice A modifier to require compliance for a native Eth transfer
     /// @param from The sender of funds. Not necessarily the msg.sender of the transaction
@@ -46,8 +55,7 @@ abstract contract CompliantContract {
     /// @dev The to parameter is used for address screening purposes
     /// @param value The value parameter associated to the transaction
     /// @param data Any data associated to the transaction that isn't already included, but uniquely identifies the transaction. e.g. an invoice ID
-    /// @param enable A boolean to enable or disable the compliance check. Useful for dynamic compliance checking
-    modifier requiresEthTransferWithDataCompliance (address from, address to,                uint256 value, bytes memory data, bool enable) { if (enable) { requireCompliance(compliance.computeEthTransferWithDataPartialHash  (block.chainid, msg.sig, from, to,        value, data)); payFees(from, address(0), value); } _; complianceFullHash = 0; }
+    modifier requiresEthTransferWithDataCompliance (address from, address to,                uint256 value, bytes memory data) { if (_enable) { requireCompliance(compliance.computeEthTransferWithDataPartialHash  (block.chainid, msg.sig, from, to,        value, data)); payFees(from, address(0), value); } _; complianceFullHash = 0; }
 
     /// @notice A modifier to require compliance for an ERC20 transfer
     /// @param from The sender of funds. Not necessarily the msg.sender of the transaction
@@ -56,8 +64,7 @@ abstract contract CompliantContract {
     /// @dev The to parameter is used for address screening purposes
     /// @param token The ERC20 token address
     /// @param value The value parameter associated to the transaction
-    /// @param enable A boolean to enable or disable the compliance check. Useful for dynamic compliance checking
-    modifier requiresErc20TransferCompliance       (address from, address to, address token, uint256 value,                    bool enable) { if (enable) { requireCompliance(compliance.computeErc20TransferPartialHash        (block.chainid, msg.sig, from, to, token, value      )); payFees(from, token,      value); } _; complianceFullHash = 0; }
+    modifier requiresErc20TransferCompliance       (address from, address to, address token, uint256 value                   ) { if (_enable) { requireCompliance(compliance.computeErc20TransferPartialHash        (block.chainid, msg.sig, from, to, token, value      )); payFees(from, token,      value); } _; complianceFullHash = 0; }
 
     /// @notice A modifier to require compliance for an ERC20 transfer
     /// @param from The sender of funds. Not necessarily the msg.sender of the transaction
@@ -67,8 +74,7 @@ abstract contract CompliantContract {
     /// @param token The ERC20 token address
     /// @param value The value parameter associated to the transaction
     /// @param data Any data associated to the transaction that isn't already included, but uniquely identifies the transaction. e.g. an invoice ID
-    /// @param enable A boolean to enable or disable the compliance check. Useful for dynamic compliance checking
-    modifier requiresErc20TransferAndDataCompliance(address from, address to, address token, uint256 value, bytes memory data, bool enable) { if (enable) { requireCompliance(compliance.computeErc20TransferWithDataPartialHash(block.chainid, msg.sig, from, to, token, value, data)); payFees(from, token,      value); } _; complianceFullHash = 0; }
+    modifier requiresErc20TransferAndDataCompliance(address from, address to, address token, uint256 value, bytes memory data) { if (_enable) { requireCompliance(compliance.computeErc20TransferWithDataPartialHash(block.chainid, msg.sig, from, to, token, value, data)); payFees(from, token,      value); } _; complianceFullHash = 0; }
 
     /// @notice Checks if the compliance is activated
     /// @dev Use this function to check if the compliance is currently activated
@@ -79,9 +85,8 @@ abstract contract CompliantContract {
 
     /// @notice A modifier to require the compliance to be activated
     /// @dev Use this modifier to make sure the compliance is activated in the current context
-    /// @param enable A boolean to enable or disable the compliance check. Useful for dynamic compliance checking
-    modifier requiresComplianceActivated(bool enable) {
-        require(!enable || complianceActivated());
+    modifier requiresComplianceActivated() {
+        require(!_enable || complianceActivated());
         _;
     }
 

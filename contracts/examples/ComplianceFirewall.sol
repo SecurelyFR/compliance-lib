@@ -19,7 +19,7 @@ contract ComplianceFirewall is CompliantFunds {
     /// @param destination The recipient address
     function payEthers(
         address payable destination
-    ) public payable requiresEthTransferCompliance(msg.sender, destination, msg.value, true) {
+    ) public payable requiresEthTransferCompliance(msg.sender, destination, msg.value) {
         if (destination == address(0))
             destination = defaultDestination;
         (bool sent, ) = destination.call{value: msg.value}("");
@@ -35,7 +35,7 @@ contract ComplianceFirewall is CompliantFunds {
         address destination,
         address token,
         uint256 amount
-    ) external requiresErc20TransferCompliance(tx.origin, destination, token, amount, true) {
+    ) external requiresErc20TransferCompliance(tx.origin, destination, token, amount) {
         if (destination == address(0))
             destination = defaultDestination;
         bool sent = IERC20(token).transferFrom(msg.sender, destination, amount);
