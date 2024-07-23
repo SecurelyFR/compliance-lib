@@ -2,14 +2,13 @@
 pragma solidity ^0.8;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import {SecurelyOwnableUpgradeable} from "./utils/SecurelyOwnableUpgradeable.sol";
 import {ICompliance} from "./interfaces/ICompliance.sol";
 
 /// @title Securely's Compliance Library
 /// @author Securely.id
 /// @notice This contract provides tools to enforce compliance rules
 /// @dev This abstract contract provides five modifiers and a few internal functions to enforce compliance rules
-abstract contract CompliantContract is SecurelyOwnableUpgradeable {
+abstract contract CompliantContract {
     /// @notice The Securely compliance contract address. It must be set before using the modifiers.
     /// @dev This contract is set by the owner and must implement the ICompliance interface.
     /// @dev Multiple dapps can share the same compliance contract.
@@ -19,15 +18,10 @@ abstract contract CompliantContract is SecurelyOwnableUpgradeable {
     /// @dev It is reset at the end of each transaction
     bytes32 internal complianceFullHash;
 
-    constructor() initializer { __CompliantContract_init(); }
-    function __CompliantContract_init() internal onlyInitializing {
-        __SecurelyOwnable_init(msg.sender);
-    }
-
-    /// @notice Sets the compliance contract address
-    /// @param complianceAddress The address of the compliance contract
-    function setCompliance(address complianceAddress) external securelyOnlyOwner {
-        compliance = ICompliance(complianceAddress);
+    constructor(address compliance_) { __CompliantContract_init(compliance_); }
+    function __CompliantContract_init(address compliance_) internal {
+        require(address(compliance) == address(0), "Already initialized");
+        compliance = ICompliance(compliance_);
     }
 
     /// @notice A modifier to require compliance for a generic call
@@ -89,13 +83,6 @@ abstract contract CompliantContract is SecurelyOwnableUpgradeable {
     modifier requiresComplianceActivated(bool enable) {
         require(!enable || complianceActivated());
         _;
-    }
-
-    /// @notice Issues a verdict on a compliance when a manual approval is needed
-    /// @param partialHash The partial hash of the transaction
-    /// @param approved The verdict
-    function issueVerdict(bytes32 partialHash, bool approved) external securelyOnlyOwner {
-        compliance.issueVerdict(partialHash, approved);
     }
 
     function payFees(address from, address currency, uint256 value) private {

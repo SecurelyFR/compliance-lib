@@ -15,6 +15,8 @@ contract CompliantTreasury is CompliantFunds {
     /// @dev For easy history tracking
     event Withdrawal(address indexed withdrawer, address indexed currency, uint256 amount);
 
+    constructor(address compliance) CompliantFunds(compliance) {}
+
     /// @notice Pay native ethers to a recipient
     /// @param destination The recipient address
     function payEthers(
