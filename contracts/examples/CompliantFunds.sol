@@ -52,6 +52,6 @@ abstract contract CompliantFunds is CompliantContract {
     ) internal requiresComplianceActivated(true) {
         _payedAmounts[destination][msg.sender][currency] += netAmount;
         _payedAmounts[destination][address(0)][currency] += netAmount;
-        emit CompliantPayment(msg.sender, destination, currency, netAmount, complianceFullHash());
+        emit CompliantPayment(msg.sender, destination, currency, netAmount, complianceFullHash);
     }
 }
