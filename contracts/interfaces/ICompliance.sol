@@ -17,14 +17,6 @@ interface ICompliance is IFeeCollector {
     /// @notice The different statuses of a transaction
     enum Status {Approved, Expired, NotFound, Pending, Rejected}
 
-    /// @notice The details of a compliance check. A transaction can have multiple compliance checks
-    struct ComplianceDetail {
-        string complianceType;
-        string providerName;
-        string ref;
-        string data;
-    }
-
     /// @notice The compliance timestamps of a transaction
     /// @dev The registry timestamp is the timestamp at which the compliance was registered
     /// @dev The expiry timestamp is the timestamp at which the compliance expires
@@ -34,9 +26,9 @@ interface ICompliance is IFeeCollector {
     }
 
     event ApprovalRequired    (address indexed dapp, bytes32 indexed fullHash, bytes32 indexed partialHash);
-    event ComplianceRegistered(address indexed dapp, bytes32 indexed fullHash, ComplianceDetail[] complianceDetails);
+    event ComplianceRegistered(address indexed dapp, bytes32 indexed fullHash, string complianceDetails);
     event ComplianceVerdict   (address indexed dapp, bytes32 indexed fullHash, bool approved);
-    event ComplianceConsumed  (address indexed dapp, bytes32 indexed fullHash, ComplianceDetail[] complianceDetails);
+    event ComplianceConsumed  (address indexed dapp, bytes32 indexed fullHash, string complianceDetails);
 
     /// @notice Gets the compliance status of a transaction
     /// @param dapp The dapp address
