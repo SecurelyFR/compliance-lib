@@ -108,9 +108,10 @@ interface ICompliance is IFeeCollector {
     function consumeCompliance(bytes32 partialHash) external payable returns (bytes32 fullHash);
 
     /// @notice Issues a verdict on a compliance
-    /// @dev Used by the dapp only
+    /// @dev Used by the controller only
     /// @dev Emits a ComplianceVerdict event
+    /// @param dapp The dapp address
     /// @param partialHash The partial hash of the transaction
     /// @param approved The verdict
-    function issueVerdict(bytes32 partialHash, bool approved) external;
+    function issueVerdict(address dapp, bytes32 partialHash, bool approved) external;
 }
