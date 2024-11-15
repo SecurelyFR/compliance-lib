@@ -21,7 +21,8 @@ contract CompliantTreasury is CompliantFunds {
     /// @param destination The recipient address
     function payEthers(
         address payable destination
-    ) external payable requiresEthTransferCompliance(msg.sender, destination, msg.value, true) {
+    ) external payable {
+        requireEthTransferCompliance(msg.sender, destination, msg.value);
         _pay(destination, address(0), msg.value);
     }
 
@@ -33,7 +34,8 @@ contract CompliantTreasury is CompliantFunds {
         address destination,
         address token,
         uint256 amount
-    ) external requiresErc20TransferCompliance(msg.sender, destination, token, amount, true) {
+    ) external {
+        requireErc20TransferCompliance(msg.sender, destination, token, amount);
         _pay(destination, token, amount);
     }
 
