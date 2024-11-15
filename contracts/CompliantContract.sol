@@ -61,7 +61,7 @@ abstract contract CompliantContract {
     /// @param value The value parameter associated to the transaction
     function requireErc20TransferCompliance(address from, address to, address token, uint256 value) internal returns (bytes32) {
         payFees(from, token, value);
-        compliance.consumeCompliance(compliance.computeErc20TransferPartialHash(block.chainid, msg.sig, from, to, token, value));
+        return compliance.consumeCompliance(compliance.computeErc20TransferPartialHash(block.chainid, msg.sig, from, to, token, value));
     }
 
     /// @notice Requires compliance for an ERC20 transfer
