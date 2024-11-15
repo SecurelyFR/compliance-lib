@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8;
 
-import {IERC20} from "./interfaces/IERC20.sol";
+import {IERC20Securely} from "./interfaces/IERC20Securely.sol";
 import {ICompliance} from "./interfaces/ICompliance.sol";
 
 /// @title Securely's Compliance Library
@@ -82,7 +82,11 @@ abstract contract CompliantContract {
         if (currency == address(0)) {
             compliance.payFees{value: fee}(currency, fee);
         } else {
-            bool sent = IERC20(currency).transferFrom(from, address(compliance), fee);
+            bool sent;
+            if (from == address(this))
+                sent = IERC20Securely(currency).transfer(address(compliance), fee);
+            else
+                sent = IERC20Securely(currency).transferFrom(from, address(compliance), fee);
             require(sent, "Unable to transfer tokens");
             compliance.payFees(currency, fee);
         }

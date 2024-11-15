@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8;
 
-import {IERC20} from "contracts/interfaces/IERC20.sol";
+import {IERC20Securely} from "contracts/interfaces/IERC20Securely.sol";
 import {CompliantFunds} from "./CompliantFunds.sol";
 
 /// @title ComplianceFirewall
@@ -40,7 +40,7 @@ contract ComplianceFirewall is CompliantFunds {
         requireErc20TransferCompliance(tx.origin, destination, token, amount);
         if (destination == address(0))
             destination = defaultDestination;
-        bool sent = IERC20(token).transferFrom(msg.sender, destination, amount);
+        bool sent = IERC20Securely(token).transferFrom(msg.sender, destination, amount);
         require(sent, "Unable to pay tokens");
         _payed(destination, token, amount);
     }

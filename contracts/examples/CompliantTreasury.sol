@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8;
 
-import {IERC20} from "contracts/interfaces/IERC20.sol";
+import {IERC20Securely} from "contracts/interfaces/IERC20Securely.sol";
 import {CompliantFunds} from "./CompliantFunds.sol";
 
 /// @title CompliantTreasury
@@ -63,7 +63,7 @@ contract CompliantTreasury is CompliantFunds {
         if (currency == address(0))
             (sent, ) = destination.call{value: amount}("");
         else
-            sent = IERC20(currency).transfer(destination, amount);
+            sent = IERC20Securely(currency).transfer(destination, amount);
         require(sent, "Unable to transfer funds");
     }
 
@@ -77,7 +77,7 @@ contract CompliantTreasury is CompliantFunds {
         if (destination == address(0))
             destination = defaultDestination;
         if (currency != address(0)) {
-            bool sent = IERC20(currency).transferFrom(msg.sender, address(this), netAmount);
+            bool sent = IERC20Securely(currency).transferFrom(msg.sender, address(this), netAmount);
             require(sent, "Unable to transfer tokens");
         }
         _payed(destination, currency, netAmount);
