@@ -17,31 +17,23 @@ contract ComplianceFirewall is CompliantFunds {
 
     /// @notice Pay native ethers to a recipient
     /// @param destination The recipient address
-    function payEthers(
-        address payable destination
-    ) public payable {
-        requireEthTransferCompliance(msg.sender, destination, msg.value);
+    function payEthers(address payable destination) public payable {
         if (destination == address(0))
             destination = defaultDestination;
         (bool sent, ) = destination.call{value: msg.value}("");
         require(sent, "Unable to pay ethers");
-        _payed(destination, address(0), msg.value);
+        _payed(destination, address(0), msg.value, requireEthTransferCompliance(msg.sender, destination, msg.value));
     }
 
     /// @notice Pay ERC20 tokens to a recipient
     /// @param destination The recipient address
     /// @param token The ERC20 token address
     /// @param amount The amount of tokens to pay
-    function payTokens(
-        address destination,
-        address token,
-        uint256 amount
-    ) external {
-        requireErc20TransferCompliance(tx.origin, destination, token, amount);
+    function payTokens(address destination, address token, uint256 amount) external {
         if (destination == address(0))
             destination = defaultDestination;
         bool sent = IERC20Securely(token).transferFrom(msg.sender, destination, amount);
         require(sent, "Unable to pay tokens");
-        _payed(destination, token, amount);
+        _payed(destination, token, amount, requireErc20TransferCompliance(tx.origin, destination, token, amount));
     }
 }

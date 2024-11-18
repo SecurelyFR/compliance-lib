@@ -8,7 +8,8 @@ import {IFeeCollector} from "./IFeeCollector.sol";
 /// @notice Simplified Compliance interface for compliance checks
 /// @dev This interface is used by the CompliantContract to interact with Securely's Compliance contract
 /// @dev A partial hash is a hash of all the different parameters of a compliant transaction. Hash is replayable.
-/// @dev A full hash is a truly unique hash, that combines the partial hash and the timestamp at which the compliance was registered. Used in events only, for easy compliance history tracking.
+/// @dev A full hash is a truly unique hash, that combines the partial hash and the timestamp at which the compliance
+///      was registered. Used in events only, for easy compliance history tracking.
 interface ICompliance is IFeeCollector {
     /// @notice The different pools of transactions
     /// @dev This gives every transaction a unique partial hash even if the parameters collide
@@ -25,10 +26,10 @@ interface ICompliance is IFeeCollector {
         uint256 expiry;
     }
 
-    event ApprovalRequired    (address indexed dapp, bytes32 indexed fullHash, bytes32 indexed partialHash);
+    event ApprovalRequired(address indexed dapp, bytes32 indexed fullHash, bytes32 indexed partialHash);
     event ComplianceRegistered(address indexed dapp, bytes32 indexed fullHash, string complianceDetails);
-    event ComplianceVerdict   (address indexed dapp, bytes32 indexed fullHash, bool approved);
-    event ComplianceConsumed  (address indexed dapp, bytes32 indexed fullHash, string complianceDetails);
+    event ComplianceVerdict(address indexed dapp, bytes32 indexed fullHash, bool approved);
+    event ComplianceConsumed(address indexed dapp, bytes32 indexed fullHash, string complianceDetails);
 
     /// @notice Gets the compliance status of a transaction
     /// @param dapp The dapp address
@@ -44,7 +45,13 @@ interface ICompliance is IFeeCollector {
     /// @param value The value parameter associated to the transaction
     /// @param data The optional data parameter associated to the transaction
     /// @return partialHash The partial hash of the transaction
-    function computeGenericCallPartialHash          (uint256 chainid, bytes4 functionSelector, address from,                            uint256 value, bytes memory data) external view returns (bytes32 partialHash);
+    function computeGenericCallPartialHash(
+        uint256 chainid,
+        bytes4 functionSelector,
+        address from,
+        uint256 value,
+        bytes memory data
+    ) external view returns (bytes32 partialHash);
 
     /// @notice Computes a partial hash based on a compliant Ether transfer transaction's parameters
     /// @param chainid The chain id. This is included so the partial hash is unique across chains
@@ -55,9 +62,16 @@ interface ICompliance is IFeeCollector {
     /// @dev The to parameter is used for address screening purposes
     /// @param value The ether amount to transfer
     /// @return partialHash The partial hash of the transaction
-    function computeEthTransferPartialHash          (uint256 chainid, bytes4 functionSelector, address from, address to,                uint256 value                   ) external view returns (bytes32 partialHash);
+    function computeEthTransferPartialHash(
+        uint256 chainid,
+        bytes4 functionSelector,
+        address from,
+        address to,
+        uint256 value
+    ) external view returns (bytes32 partialHash);
 
-    /// @notice Computes a partial hash based on a compliant Ether transfer transaction's parameters and a bonus data field
+    /// @notice Computes a partial hash based on a compliant Ether transfer transaction's parameters and a bonus data
+    ///         field
     /// @param chainid The chain id. This is included so the partial hash is unique across chains
     /// @param functionSelector The function selector of the transaction
     /// @param from The sender of funds. Not necessarily the msg.sender of the transaction
@@ -65,11 +79,20 @@ interface ICompliance is IFeeCollector {
     /// @param to The receiver of funds. Not necessarily the dapp / the receiver of the transaction
     /// @dev The to parameter is used for address screening purposes
     /// @param value The ether amount to transfer
-    /// @param data Any data associated to the transaction that isn't already included, but uniquely identifies the transaction. e.g. an invoice ID
+    /// @param data Any data associated to the transaction that isn't already included, but uniquely identifies the
+    ///             transaction. e.g. an invoice ID
     /// @return partialHash The partial hash of the transaction
-    function computeEthTransferWithDataPartialHash  (uint256 chainid, bytes4 functionSelector, address from, address to,                uint256 value, bytes memory data) external view returns (bytes32 partialHash);
+    function computeEthTransferWithDataPartialHash(
+        uint256 chainid,
+        bytes4 functionSelector,
+        address from,
+        address to,
+        uint256 value,
+        bytes memory data
+    ) external view returns (bytes32 partialHash);
 
-    /// @notice Computes a partial hash based on a compliant Ether transfer transaction's parameters and a bonus data field
+    /// @notice Computes a partial hash based on a compliant Ether transfer transaction's parameters and a bonus data
+    ///         field
     /// @param chainid The chain id. This is included so the partial hash is unique across chains
     /// @param functionSelector The function selector of the transaction
     /// @param from The sender of funds. Not necessarily the msg.sender of the transaction
@@ -78,9 +101,17 @@ interface ICompliance is IFeeCollector {
     /// @dev The to parameter is used for address screening purposes
     /// @param value The ether amount to transfer
     /// @return partialHash The partial hash of the transaction
-    function computeErc20TransferPartialHash        (uint256 chainid, bytes4 functionSelector, address from, address to, address token, uint256 value                   ) external view returns (bytes32 partialHash);
+    function computeErc20TransferPartialHash(
+        uint256 chainid,
+        bytes4 functionSelector,
+        address from,
+        address to,
+        address token,
+        uint256 value
+    ) external view returns (bytes32 partialHash);
 
-    /// @notice Computes a partial hash based on a compliant Ether transfer transaction's parameters and a bonus data field
+    /// @notice Computes a partial hash based on a compliant Ether transfer transaction's parameters and a bonus data
+    ///         field
     /// @param chainid The chain id. This is included so the partial hash is unique across chains
     /// @param functionSelector The function selector of the transaction
     /// @param from The sender of funds. Not necessarily the msg.sender of the transaction
@@ -88,9 +119,18 @@ interface ICompliance is IFeeCollector {
     /// @param to The receiver of funds. Not necessarily the dapp / the receiver of the transaction
     /// @dev The to parameter is used for address screening purposes
     /// @param value The ether amount to transfer
-    /// @param data Any data associated to the transaction that isn't already included, but uniquely identifies the transaction. e.g. an invoice ID
+    /// @param data Any data associated to the transaction that isn't already included, but uniquely identifies the
+    ///             transaction. e.g. an invoice ID
     /// @return partialHash The partial hash of the transaction
-    function computeErc20TransferWithDataPartialHash(uint256 chainid, bytes4 functionSelector, address from, address to, address token, uint256 value, bytes memory data) external view returns (bytes32 partialHash);
+    function computeErc20TransferWithDataPartialHash(
+        uint256 chainid,
+        bytes4 functionSelector,
+        address from,
+        address to,
+        address token,
+        uint256 value,
+        bytes memory data
+    ) external view returns (bytes32 partialHash);
 
     /// @notice Consumes a compliance
     /// @dev Used by the dapp only
