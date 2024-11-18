@@ -33,11 +33,7 @@ abstract contract CompliantFunds is CompliantContract {
     /// @param destination The recipient address
     /// @param sender The sender address. Use 0x0 to wildcard sender
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
-    function amountPayed(
-        address destination,
-        address sender,
-        address currency
-    ) public view returns(uint256) {
+    function amountPayed(address destination, address sender, address currency) public view returns(uint256) {
         return _payedAmounts[destination][sender][currency];
     }
 
@@ -45,11 +41,8 @@ abstract contract CompliantFunds is CompliantContract {
     /// @param destination The recipient address
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
     /// @param netAmount The net amount payed
-    function _payed(
-        address destination,
-        address currency,
-        uint256 netAmount
-    ) internal {
+    /// @param complianceFullHash The compliance full hash
+    function _payed(address destination, address currency, uint256 netAmount, bytes32 complianceFullHash) internal {
         _payedAmounts[destination][msg.sender][currency] += netAmount;
         _payedAmounts[destination][address(0)][currency] += netAmount;
         emit CompliantPayment(msg.sender, destination, currency, netAmount, complianceFullHash);

@@ -26,7 +26,9 @@ abstract contract CompliantContract {
     /// @param value The value parameter associated to the transaction
     /// @param data An optional data parameter associated to the transaction
     function requireGenericCallCompliance(uint256 value, bytes memory data) internal returns (bytes32) {
-        return compliance.consumeCompliance(compliance.computeGenericCallPartialHash(block.chainid, msg.sig, msg.sender, value, data));
+        return compliance.consumeCompliance(
+            compliance.computeGenericCallPartialHash(block.chainid, msg.sig, msg.sender, value, data)
+        );
     }
 
     /// @notice Requires compliance for a native Eth transfer
@@ -37,7 +39,9 @@ abstract contract CompliantContract {
     /// @param value The value parameter associated to the transaction
     function requireEthTransferCompliance(address from, address to, uint256 value) internal returns (bytes32) {
         payFees(from, address(0), value);
-        return compliance.consumeCompliance(compliance.computeEthTransferPartialHash(block.chainid, msg.sig, from, to, value));
+        return compliance.consumeCompliance(
+            compliance.computeEthTransferPartialHash(block.chainid, msg.sig, from, to, value)
+        );
     }
 
     /// @notice Requires compliance for a native Eth transfer
@@ -46,10 +50,18 @@ abstract contract CompliantContract {
     /// @param to The receiver of funds. Not necessarily the dapp / the receiver of the transaction
     /// @dev The to parameter is used for address screening purposes
     /// @param value The value parameter associated to the transaction
-    /// @param data Any data associated to the transaction that isn't already included, but uniquely identifies the transaction. e.g. an invoice ID
-    function requireEthTransferWithDataCompliance(address from, address to, uint256 value, bytes memory data) internal returns (bytes32) {
+    /// @param data Any data associated to the transaction that isn't already included, but uniquely identifies the
+    ///             transaction. e.g. an invoice ID
+    function requireEthTransferWithDataCompliance(
+        address from,
+        address to,
+        uint256 value,
+        bytes memory data
+    ) internal returns (bytes32) {
         payFees(from, address(0), value);
-        return compliance.consumeCompliance(compliance.computeEthTransferWithDataPartialHash(block.chainid, msg.sig, from, to, value, data));
+        return compliance.consumeCompliance(
+            compliance.computeEthTransferWithDataPartialHash(block.chainid, msg.sig, from, to, value, data)
+        );
     }
 
     /// @notice Requires compliance for an ERC20 transfer
@@ -59,9 +71,16 @@ abstract contract CompliantContract {
     /// @dev The to parameter is used for address screening purposes
     /// @param token The ERC20 token address
     /// @param value The value parameter associated to the transaction
-    function requireErc20TransferCompliance(address from, address to, address token, uint256 value) internal returns (bytes32) {
+    function requireErc20TransferCompliance(
+        address from,
+        address to,
+        address token,
+        uint256 value
+    ) internal returns (bytes32) {
         payFees(from, token, value);
-        return compliance.consumeCompliance(compliance.computeErc20TransferPartialHash(block.chainid, msg.sig, from, to, token, value));
+        return compliance.consumeCompliance(
+            compliance.computeErc20TransferPartialHash(block.chainid, msg.sig, from, to, token, value)
+        );
     }
 
     /// @notice Requires compliance for an ERC20 transfer
@@ -71,10 +90,19 @@ abstract contract CompliantContract {
     /// @dev The to parameter is used for address screening purposes
     /// @param token The ERC20 token address
     /// @param value The value parameter associated to the transaction
-    /// @param data Any data associated to the transaction that isn't already included, but uniquely identifies the transaction. e.g. an invoice ID
-    function requireErc20TransferAndDataCompliance(address from, address to, address token, uint256 value, bytes memory data) internal returns (bytes32) {
+    /// @param data Any data associated to the transaction that isn't already included, but uniquely identifies the
+    ///             transaction. e.g. an invoice ID
+    function requireErc20TransferAndDataCompliance(
+        address from,
+        address to,
+        address token,
+        uint256 value,
+        bytes memory data
+    ) internal returns (bytes32) {
         payFees(from, token, value);
-        return compliance.consumeCompliance(compliance.computeErc20TransferWithDataPartialHash(block.chainid, msg.sig, from, to, token, value, data));
+        return compliance.consumeCompliance(
+            compliance.computeErc20TransferWithDataPartialHash(block.chainid, msg.sig, from, to, token, value, data)
+        );
     }
 
     function payFees(address from, address currency, uint256 value) private {

@@ -19,24 +19,16 @@ contract CompliantTreasury is CompliantFunds {
 
     /// @notice Pay native ethers to a recipient
     /// @param destination The recipient address
-    function payEthers(
-        address payable destination
-    ) external payable {
-        requireEthTransferCompliance(msg.sender, destination, msg.value);
-        _pay(destination, address(0), msg.value);
+    function payEthers(address payable destination) external payable {
+        _pay(destination, address(0), msg.value, requireEthTransferCompliance(msg.sender, destination, msg.value));
     }
 
     /// @notice Pay ERC20 tokens to a recipient
     /// @param destination The recipient address
     /// @param token The ERC20 token address
     /// @param amount The amount of tokens to pay
-    function payTokens(
-        address destination,
-        address token,
-        uint256 amount
-    ) external {
-        requireErc20TransferCompliance(msg.sender, destination, token, amount);
-        _pay(destination, token, amount);
+    function payTokens(address destination, address token, uint256 amount) external {
+        _pay(destination, token, amount, requireErc20TransferCompliance(msg.sender, destination, token, amount));
     }
 
     /// @notice Withdraw your funds from the treasury
@@ -71,7 +63,8 @@ contract CompliantTreasury is CompliantFunds {
     /// @param destination The recipient address
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
     /// @param amount The amount of tokens to pay
-    function _pay(address destination, address currency, uint256 amount) private {
+    /// @param complianceFullHash The compliance full hash
+    function _pay(address destination, address currency, uint256 amount, bytes32 complianceFullHash) private {
         uint256 netAmount = compliance.getNetAmount(amount);
         require (netAmount > 0);
         if (destination == address(0))
@@ -80,7 +73,7 @@ contract CompliantTreasury is CompliantFunds {
             bool sent = IERC20Securely(currency).transferFrom(msg.sender, address(this), netAmount);
             require(sent, "Unable to transfer tokens");
         }
-        _payed(destination, currency, netAmount);
+        _payed(destination, currency, netAmount, complianceFullHash);
         _treasury[destination][currency] += netAmount;
     }
 }

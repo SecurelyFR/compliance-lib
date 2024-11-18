@@ -7,7 +7,8 @@ import {CompliantFunds} from "./CompliantFunds.sol";
 
 /// @title WhitelistedCompliantTreasury
 /// @author Securely.id
-/// @notice This contract is a vault ensuring all funds going in and out are compliant. Whitelisted addresses can bypass the check.
+/// @notice This contract is a vault ensuring all funds going in and out are compliant. Whitelisted addresses can bypass
+///         the check.
 contract WhitelistedCompliantTreasury is CompliantFunds, AccessControl {
     /// @notice The whitelisted addresses role
     bytes32 public constant WHITELISTED_ROLE = keccak256("WHITELISTED_ROLE");
@@ -26,23 +27,27 @@ contract WhitelistedCompliantTreasury is CompliantFunds, AccessControl {
 
     /// @notice Pay native ethers to a recipient
     /// @param destination The recipient address
-    function payEthers(
-        address payable destination
-    ) external payable enableCompliance(!_isWhitelisted()) requiresEthTransferCompliance(msg.sender, destination, msg.value) {
-        _pay(destination, address(0), msg.value);
+    function payEthers(address payable destination) external payable {
+        _pay(
+            destination,
+            address(0),
+            msg.value,
+            _isWhitelisted() ? bytes32(0) : requireEthTransferCompliance(msg.sender, destination, msg.value)
+        );
     }
 
     /// @notice Pay ERC20 tokens to a recipient
     /// @param destination The recipient address
     /// @param token The ERC20 token address
     /// @param amount The amount of tokens to pay
-    function payTokens(
-        address destination,
-        address token,
-        uint256 amount
-    ) external enableCompliance(!_isWhitelisted()) requiresErc20TransferCompliance(msg.sender, destination, token, amount) {
+    function payTokens(address destination, address token, uint256 amount) external {
         require(token != address(0), "Invalid token address");
-        _pay(destination, token, amount);
+        _pay(
+            destination,
+            token,
+            amount,
+            _isWhitelisted() ? bytes32(0) : requireErc20TransferCompliance(msg.sender, destination, token, amount)
+        );
     }
 
     /// @notice Withdraw your funds from the treasury
@@ -64,11 +69,8 @@ contract WhitelistedCompliantTreasury is CompliantFunds, AccessControl {
     /// @param destination The recipient address
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
     /// @param amount The amount of tokens to transfer. Use 0 to transfer all
-    function transferTo(
-        address destination,
-        address currency,
-        uint256 amount
-    ) public enableCompliance(true) requiresErc20TransferCompliance(address(this), destination, currency, amount) {
+    function transferTo(address destination, address currency, uint256 amount) public {
+        requireErc20TransferCompliance(address(this), destination, currency, amount);
         require(!_isWhitelisted(), "Whitelisted addresses need to use the payXXX functions to transfer funds");
         require(amount <= _treasury[msg.sender][currency], "Insufficient funds in the treasury");
         if (amount == 0)
@@ -92,7 +94,7 @@ contract WhitelistedCompliantTreasury is CompliantFunds, AccessControl {
         if (currency == address(0))
             (sent, ) = destination.call{value: netAmount}("");
         else
-            sent = IERC20(currency).transfer(destination, netAmount);
+            sent = IERC20Securely(currency).transfer(destination, netAmount);
         require(sent, "Unable to transfer funds");
     }
 
@@ -100,7 +102,8 @@ contract WhitelistedCompliantTreasury is CompliantFunds, AccessControl {
     /// @param destination The recipient address
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
     /// @param amount The amount of tokens to pay
-    function _pay(address destination, address currency, uint256 amount) private {
+    /// @param complianceFullHash The compliance full hash
+    function _pay(address destination, address currency, uint256 amount, bytes32 complianceFullHash) private {
         uint256 netAmount = amount;
         if (_isWhitelisted()) {
             require(netAmount <= _treasury[msg.sender][currency], "Insufficient compliant funds");
@@ -113,10 +116,10 @@ contract WhitelistedCompliantTreasury is CompliantFunds, AccessControl {
         if (destination == address(0))
             destination = defaultDestination;
         if (currency != address(0)) {
-            bool sent = IERC20(currency).transferFrom(msg.sender, address(this), netAmount);
+            bool sent = IERC20Securely(currency).transferFrom(msg.sender, address(this), netAmount);
             require(sent, "Unable to transfer tokens");
         }
-        _payed(destination, currency, netAmount);
+        _payed(destination, currency, netAmount, complianceFullHash);
         _treasury[destination][currency] += netAmount;
         if (hasRole(WHITELISTED_ROLE, destination))
             _transferTo(destination, currency, netAmount);
