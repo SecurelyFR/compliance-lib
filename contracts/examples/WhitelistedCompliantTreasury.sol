@@ -42,6 +42,10 @@ contract WhitelistedCompliantTreasury is CompliantFunds, AccessControl {
     /// @param amount The amount of tokens to pay
     function payTokens(address destination, address token, uint256 amount) external {
         require(token != address(0), "Invalid token address");
+        require(
+            IERC20Securely(token).transferFrom(msg.sender, address(this), amount),
+            "Unable to transfer tokens"
+        );
         _pay(
             destination,
             token,
@@ -70,7 +74,11 @@ contract WhitelistedCompliantTreasury is CompliantFunds, AccessControl {
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
     /// @param amount The amount of tokens to transfer. Use 0 to transfer all
     function transferTo(address destination, address currency, uint256 amount) public {
-        requireErc20TransferCompliance(address(this), destination, currency, amount);
+        bytes32 complianceFullHash;
+        if (currency == address(0))
+            complianceFullHash = requireEthTransferCompliance(msg.sender, destination, amount);
+        else
+            complianceFullHash = requireErc20TransferCompliance(msg.sender, destination, currency, amount);
         require(!_isWhitelisted(), "Whitelisted addresses need to use the payXXX functions to transfer funds");
         require(amount <= _treasury[msg.sender][currency], "Insufficient funds in the treasury");
         if (amount == 0)
@@ -79,7 +87,7 @@ contract WhitelistedCompliantTreasury is CompliantFunds, AccessControl {
 
         _treasury[msg.sender][currency] -= amount;
         emit Withdrawal(msg.sender, currency, amount);
-        _transferTo(destination, currency, amount);
+        _pay(destination, currency, amount, complianceFullHash);
     }
 
     /// @dev Actually transfer funds to a recipient
@@ -115,14 +123,19 @@ contract WhitelistedCompliantTreasury is CompliantFunds, AccessControl {
         require (netAmount > 0, "Impossible to pay 0 funds");
         if (destination == address(0))
             destination = defaultDestination;
-        if (currency != address(0)) {
-            bool sent = IERC20Securely(currency).transferFrom(msg.sender, address(this), netAmount);
-            require(sent, "Unable to transfer tokens");
-        }
         _payed(destination, currency, netAmount, complianceFullHash);
-        _treasury[destination][currency] += netAmount;
-        if (hasRole(WHITELISTED_ROLE, destination))
-            _transferTo(destination, currency, netAmount);
+        if (msg.sender != destination)
+            _treasury[destination][currency] += netAmount;
+        if (hasRole(WHITELISTED_ROLE, destination) || msg.sender == destination) {
+            // If the destination is whitelisted, transfer directly
+            // If msg.sender == destination, it's a withdrawal, so we transfer aswell
+            bool sent;
+            if (currency == address(0))
+                (sent, ) = destination.call{value: netAmount}("");
+            else
+                sent = IERC20Securely(currency).transfer(destination, netAmount);
+            require(sent, "Unable to transfer funds");
+        }
     }
 
     /// @dev Check if the sender is whitelisted

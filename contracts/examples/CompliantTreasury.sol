@@ -28,6 +28,10 @@ contract CompliantTreasury is CompliantFunds {
     /// @param token The ERC20 token address
     /// @param amount The amount of tokens to pay
     function payTokens(address destination, address token, uint256 amount) external {
+        require(
+            IERC20Securely(token).transferFrom(msg.sender, address(this), amount),
+            "Unable to transfer tokens"
+        );
         _pay(destination, token, amount, requireErc20TransferCompliance(msg.sender, destination, token, amount));
     }
 
@@ -44,9 +48,13 @@ contract CompliantTreasury is CompliantFunds {
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
     function transferTo(address destination, uint256 amount, address currency) public {
         require(amount <= _treasury[msg.sender][currency]);
-        if (amount == 0) {
+        bytes32 complianceFullHash;
+        if (currency == address(0))
+            complianceFullHash = requireEthTransferCompliance(msg.sender, destination, amount);
+        else
+            complianceFullHash = requireErc20TransferCompliance(msg.sender, destination, currency, amount);
+        if (amount == 0)
             amount = _treasury[msg.sender][currency];
-        }
         require(amount > 0);
 
         _treasury[msg.sender][currency] -= amount;
@@ -56,6 +64,20 @@ contract CompliantTreasury is CompliantFunds {
             (sent, ) = destination.call{value: amount}("");
         else
             sent = IERC20Securely(currency).transfer(destination, amount);
+        require(sent, "Unable to transfer funds");
+    }
+
+    /// @dev Actually transfer funds to a recipient
+    /// @param destination The recipient address
+    /// @param currency The ERC20 token address. Use 0x0 for native ethers
+    /// @param amount The amount of tokens to transfer
+    function _transferTo(address destination, address currency, uint256 amount) private {
+        uint256 netAmount = compliance.getNetAmount(amount);
+        bool sent;
+        if (currency == address(0))
+            (sent, ) = destination.call{value: netAmount}("");
+        else
+            sent = IERC20Securely(currency).transfer(destination, netAmount);
         require(sent, "Unable to transfer funds");
     }
 
@@ -70,10 +92,19 @@ contract CompliantTreasury is CompliantFunds {
         if (destination == address(0))
             destination = defaultDestination;
         if (currency != address(0)) {
-            bool sent = IERC20Securely(currency).transferFrom(msg.sender, address(this), netAmount);
-            require(sent, "Unable to transfer tokens");
+
         }
         _payed(destination, currency, netAmount, complianceFullHash);
-        _treasury[destination][currency] += netAmount;
+        if (msg.sender != destination) {
+            _treasury[destination][currency] += netAmount;
+        } else {
+            // If msg.sender == destination, it's a withdrawal. Actually send the funds out.
+            bool sent;
+            if (currency == address(0))
+                (sent, ) = destination.call{value: netAmount}("");
+            else
+                sent = IERC20Securely(currency).transfer(destination, netAmount);
+            require(sent, "Unable to transfer funds");
+        }
     }
 }
