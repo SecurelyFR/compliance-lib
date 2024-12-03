@@ -2,12 +2,12 @@
 pragma solidity ^0.8;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {CompliantContract} from "contracts/CompliantContract.sol";
+import {CompliantContract} from "../CompliantContract.sol";
 
 /// @title ComplianceFirewall
 /// @author Securely.id
 /// @notice This contract is a firewall ensuring all funds going in and out are compliant
-contract ComplianceFirewall {
+contract ComplianceFirewall is CompliantContract {
     constructor(address compliance) CompliantContract(compliance) {}
 
     /// @dev Sends orphan ethers to the default destination
@@ -19,8 +19,6 @@ contract ComplianceFirewall {
     /// @param destination The recipient address
     function payEthers(address payable destination) public payable {
         requireEthTransferCompliance(msg.sender, destination, msg.value);
-        if (destination == address(0))
-            destination = defaultDestination;
         (bool sent, ) = destination.call{value: msg.value}("");
         require(sent, "Unable to pay ethers");
     }
@@ -31,8 +29,6 @@ contract ComplianceFirewall {
     /// @param amount The amount of tokens to pay
     function payTokens(address destination, address token, uint256 amount) external {
         requireErc20TransferCompliance(tx.origin, destination, token, amount);
-        if (destination == address(0))
-            destination = defaultDestination;
         bool sent = IERC20(token).transferFrom(msg.sender, destination, amount);
         require(sent, "Unable to pay tokens");
     }
