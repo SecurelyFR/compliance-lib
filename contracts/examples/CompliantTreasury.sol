@@ -2,7 +2,7 @@
 pragma solidity ^0.8;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {CompliantContract} from "contracts/CompliantContract.sol";
+import {CompliantContract} from "../CompliantContract.sol";
 
 /// @title CompliantTreasury
 /// @author Securely.id
