@@ -32,12 +32,12 @@
   },
   "homepage": "https://securely.id",
   "dependencies": {
-    "@openzeppelin/contracts": "^5.1.0",
-    "fs": "0.0.1-security",
-    "path": "^0.12.7"
+    "@openzeppelin/contracts": "^5.0.0"
   },
   "devDependencies": {
-    "browserify": "^17.0.0",
-    "hardhat": "^2.22.5"
+    "browserify": "^17.0.1",
+    "hardhat": "^2.22.16",
+    "fs": "0.0.1-security",
+    "path": "^0.12.7"
   }
 }
