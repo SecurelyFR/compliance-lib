@@ -23,20 +23,18 @@ interface IComplianceOracle {
     }
 
     event ApprovalRequired(address indexed dapp, bytes32 indexed fullHash, bytes32 indexed partialHash);
-    event ComplianceRegistered(address indexed dapp, bytes32 indexed fullHash, string complianceDetails);
+    event ComplianceRegistered(address indexed dapp, bytes32 indexed fullHash);
     event ComplianceVerdict(address indexed dapp, bytes32 indexed fullHash, bool approved);
-    event ComplianceConsumed(address indexed dapp, bytes32 indexed fullHash, string complianceDetails);
+    event ComplianceConsumed(address indexed dapp, bytes32 indexed fullHash);
 
     /// @notice Registers a compliance
     /// @param dapp The dapp address
     /// @param partialHash The partial hash of the transaction
     /// @param requiresApproval Whether the transaction requires manual approval from the dapp or not
-    /// @param complianceDetails The compliance details
     function registerHash(
         address dapp,
         bytes32 partialHash,
-        bool requiresApproval,
-        string calldata complianceDetails
+        bool requiresApproval
     ) external;
 
     /// @notice Issues a verdict on a compliance
@@ -51,7 +49,7 @@ interface IComplianceOracle {
     /// @param dapp The dapp address
     /// @param partialHash The partial hash of the transaction
     /// @return status the status of the transaction
-    function getStatus(address dapp, bytes32 partialHash) external view returns (Status);
+    function getStatus(address dapp, bytes32 partialHash) external view returns (Status status);
 
     /// @notice Computes a partial hash based on a transaction's parameters
     /// @param sender The msg.sender of the transaction
