@@ -2,132 +2,59 @@
 pragma solidity ^0.8;
 
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {IERC20Securely} from "contracts/interfaces/IERC20Securely.sol";
-import {CompliantFunds} from "./CompliantFunds.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {CompliantTreasury} from "./CompliantTreasury.sol";
 
-/// @title WhitelistedCompliantTreasury
+/// @title CompliantTreasury
 /// @author Securely.id
-/// @notice This contract is a vault ensuring all funds going in and out are compliant. Whitelisted addresses can bypass
-///         the check.
-contract WhitelistedCompliantTreasury is CompliantFunds, AccessControl {
+/// @notice This contract is a vault ensuring all funds moving through it are compliant. Whitelisted addresses bypass
+///         the check and are self-custodial.
+contract WhitelistedCompliantTreasury is AccessControl, CompliantTreasury {
     /// @notice The whitelisted addresses role
     bytes32 public constant WHITELISTED_ROLE = keccak256("WHITELISTED_ROLE");
 
-    /// @dev mapping(receiver => currency => amount)
-    /// @dev Using currency = 0x0 for native ethers.
-    mapping(address => mapping(address => uint256)) private _treasury;
-
-    /// @dev For easy history tracking
-    event Withdrawal(address indexed withdrawer, address indexed currency, uint256 amount);
-
-    constructor(address compliance) CompliantFunds(compliance) {
+    constructor(address compliance) CompliantTreasury(compliance) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(WHITELISTED_ROLE, msg.sender);
     }
 
-    /// @notice Pay native ethers to a recipient
-    /// @param destination The recipient address
-    function payEthers(address payable destination) external payable {
-        _pay(
-            destination,
-            address(0),
-            msg.value,
-            _isWhitelisted() ? bytes32(0) : requireEthTransferCompliance(msg.sender, destination, msg.value)
-        );
-    }
-
-    /// @notice Pay ERC20 tokens to a recipient
-    /// @param destination The recipient address
-    /// @param token The ERC20 token address
-    /// @param amount The amount of tokens to pay
-    function payTokens(address destination, address token, uint256 amount) external {
-        require(token != address(0), "Invalid token address");
-        _pay(
-            destination,
-            token,
-            amount,
-            _isWhitelisted() ? bytes32(0) : requireErc20TransferCompliance(msg.sender, destination, token, amount)
-        );
-    }
-
-    /// @notice Withdraw your funds from the treasury
+    /// @notice Pay funds to an account in the treasury
+    /// @param destination The account receiving funds in the treasury. Equals to msg.sender when it's a deposit
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
-    /// @param amount The amount of tokens to withdraw. Use 0 to withdraw all
-    function withdraw(address currency, uint256 amount) external {
-        transferTo(msg.sender, currency, amount);
+    /// @param amount The amount of eth/tokens to pay
+    function pay(address destination, address currency, uint256 amount) virtual public payable override {
+        require(!hasRole(WHITELISTED_ROLE, msg.sender));
+        super.pay(destination, currency, amount);
     }
 
-    /// @notice Get the treasury balance of an account
-    /// @param account The account address
+    /// @notice Withdraw funds from the treasury
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
-    /// @return The balance of the account
-    function balanceOf(address account, address currency) external view returns (uint256) {
-        return _treasury[account][currency];
+    /// @param amount The amount of eth/tokens to deposit
+    function withdraw(address currency, uint256 amount) virtual public override {
+        require(!hasRole(WHITELISTED_ROLE, msg.sender));
+        super.withdraw(currency, amount);
     }
 
     /// @notice Transfer funds from the treasury to a recipient
     /// @param destination The recipient address
-    /// @param currency The ERC20 token address. Use 0x0 for native ethers
     /// @param amount The amount of tokens to transfer. Use 0 to transfer all
-    function transferTo(address destination, address currency, uint256 amount) public {
-        requireErc20TransferCompliance(address(this), destination, currency, amount);
-        require(!_isWhitelisted(), "Whitelisted addresses need to use the payXXX functions to transfer funds");
-        require(amount <= _treasury[msg.sender][currency], "Insufficient funds in the treasury");
-        if (amount == 0)
-            amount = _treasury[msg.sender][currency];
-        require(amount > 0, "Impossible to transfer 0 funds");
-
-        _treasury[msg.sender][currency] -= amount;
-        emit Withdrawal(msg.sender, currency, amount);
-        _transferTo(destination, currency, amount);
+    /// @param currency The ERC20 token address. Use 0x0 for native ethers
+    function transfer(address destination, address currency, uint256 amount) virtual public override {
+        if (!hasRole(WHITELISTED_ROLE, msg.sender))
+            _requireTransferCompliance(msg.sender, msg.sender, currency, amount);
+        _move(msg.sender, destination, currency, amount);
+        emit Transfer(msg.sender, destination, currency, amount);
     }
 
-    /// @dev Actually transfer funds to a recipient
-    /// @param destination The recipient address
+    /// @notice Move funds from an internal account to another internal account
+    /// @param source The internal account sending the funds
+    /// @param destination The internal account receiving the funds
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
-    /// @param amount The amount of tokens to transfer
-    function _transferTo(address destination, address currency, uint256 amount) private {
-        uint256 netAmount = amount;
-        if (!_isWhitelisted())
-            netAmount = compliance.getNetAmount(amount);
-        bool sent;
-        if (currency == address(0))
-            (sent, ) = destination.call{value: netAmount}("");
-        else
-            sent = IERC20Securely(currency).transfer(destination, netAmount);
-        require(sent, "Unable to transfer funds");
-    }
-
-    /// @dev Pay funds to a recipient
-    /// @param destination The recipient address
-    /// @param currency The ERC20 token address. Use 0x0 for native ethers
-    /// @param amount The amount of tokens to pay
-    /// @param complianceFullHash The compliance full hash
-    function _pay(address destination, address currency, uint256 amount, bytes32 complianceFullHash) private {
-        uint256 netAmount = amount;
-        if (_isWhitelisted()) {
-            require(netAmount <= _treasury[msg.sender][currency], "Insufficient compliant funds");
-            _treasury[msg.sender][currency] -= netAmount;
-            emit Withdrawal(msg.sender, currency, netAmount);
-        } else {
-            netAmount = compliance.getNetAmount(amount);
-        }
-        require (netAmount > 0, "Impossible to pay 0 funds");
-        if (destination == address(0))
-            destination = defaultDestination;
-        if (currency != address(0)) {
-            bool sent = IERC20Securely(currency).transferFrom(msg.sender, address(this), netAmount);
-            require(sent, "Unable to transfer tokens");
-        }
-        _payed(destination, currency, netAmount, complianceFullHash);
-        _treasury[destination][currency] += netAmount;
+    /// @param amount The amount of eth/tokens transferred
+    function _move(address source, address destination, address currency, uint256 amount) virtual internal override {
+        if (hasRole(WHITELISTED_ROLE, source))
+            _receive(currency, amount);
+        super._move(source, destination, currency, amount);
         if (hasRole(WHITELISTED_ROLE, destination))
-            _transferTo(destination, currency, netAmount);
-    }
-
-    /// @dev Check if the sender is whitelisted
-    /// @return true if the sender is whitelisted
-    function _isWhitelisted() private view returns (bool) {
-        return hasRole(WHITELISTED_ROLE, msg.sender);
+            _send(destination, currency, amount);
     }
 }
