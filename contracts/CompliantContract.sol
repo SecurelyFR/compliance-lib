@@ -1,122 +1,54 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8;
 
-import {IERC20Securely} from "./interfaces/IERC20Securely.sol";
 import {ICompliance} from "./interfaces/ICompliance.sol";
 
 /// @title Securely's Compliance Library
 /// @author Securely.id
 /// @notice This contract provides tools to enforce compliance rules
-/// @dev This abstract contract provides five modifiers and a few internal functions to enforce compliance rules
+/// @dev This abstract contract provides five functions to enforce compliance rules
 abstract contract CompliantContract {
-    /// @notice The Securely compliance contract address. It must be set before using the modifiers.
+    /// @notice The Securely compliance contract address. It must be set before using the require functions.
     /// @dev This contract is set by the owner and must implement the ICompliance interface.
     /// @dev Multiple dapps can share the same compliance contract.
     ICompliance public compliance;
 
+    /// @dev Both a constructor and init functions are defined, so that this contract can be easily upgradeable or not
     constructor(address compliance_) {
         __CompliantContract_init(compliance_);
     }
+
     function __CompliantContract_init(address compliance_) internal {
+        __CompliantContract_init_unchained(compliance_);
+    }
+
+    function __CompliantContract_init_unchained(address compliance_) internal {
         require(address(compliance) == address(0), "Already initialized");
         compliance = ICompliance(compliance_);
     }
 
-    /// @notice Requires compliance for a generic call
-    /// @param value The value parameter associated to the transaction
-    /// @param data An optional data parameter associated to the transaction
-    function requireGenericCallCompliance(uint256 value, bytes memory data) internal returns (bytes32) {
-        return compliance.consumeCompliance(
-            compliance.computeGenericCallPartialHash(block.chainid, msg.sig, msg.sender, value, data)
-        );
+    /// @notice Requires compliance for a transaction
+    /// @param screening An array of addresses that should be available in the policy
+    /// @param values An array of token/amount that should be available in the policy
+    /// @dev Use 0x0 as a token address for native ETH
+    function requireCompliance(address[] memory screening, ICompliance.Value[] memory values) internal {
+        compliance.requireCompliance(msg.sender, msg.value, msg.data, screening, values);
     }
 
-    /// @notice Requires compliance for a native Eth transfer
-    /// @param from The sender of funds. Not necessarily the msg.sender of the transaction
-    /// @dev The from parameter is used for address screening purposes
-    /// @param to The receiver of funds. Not necessarily the dapp / the receiver of the transaction
-    /// @dev The to parameter is used for address screening purposes
-    /// @param value The value parameter associated to the transaction
-    function requireEthTransferCompliance(address from, address to, uint256 value) internal returns (bytes32) {
-        payFees(from, address(0), value);
-        return compliance.consumeCompliance(
-            compliance.computeEthTransferPartialHash(block.chainid, msg.sig, from, to, value)
-        );
+    /// @notice Requires compliance for a transaction
+    /// @param values An array of token/amount that should be available in the policy
+    /// @dev Use 0x0 as a token address for native ETH
+    function requireCompliance(ICompliance.Value[] memory values) internal {
+        compliance.requireCompliance(msg.sender, msg.value, msg.data, values);
     }
 
-    /// @notice Requires compliance for a native Eth transfer
-    /// @param from The sender of funds. Not necessarily the msg.sender of the transaction
-    /// @dev The from parameter is used for address screening purposes
-    /// @param to The receiver of funds. Not necessarily the dapp / the receiver of the transaction
-    /// @dev The to parameter is used for address screening purposes
-    /// @param value The value parameter associated to the transaction
-    /// @param data Any data associated to the transaction that isn't already included, but uniquely identifies the
-    ///             transaction. e.g. an invoice ID
-    function requireEthTransferWithDataCompliance(
-        address from,
-        address to,
-        uint256 value,
-        bytes memory data
-    ) internal returns (bytes32) {
-        payFees(from, address(0), value);
-        return compliance.consumeCompliance(
-            compliance.computeEthTransferWithDataPartialHash(block.chainid, msg.sig, from, to, value, data)
-        );
+    /// @notice Requires compliance for a transaction
+    /// @param screening An array of addresses that should be available in the policy
+    function requireCompliance(address[] memory screening) internal {
+        compliance.requireCompliance(msg.sender, msg.value, msg.data, screening);
     }
 
-    /// @notice Requires compliance for an ERC20 transfer
-    /// @param from The sender of funds. Not necessarily the msg.sender of the transaction
-    /// @dev The from parameter is used for address screening purposes
-    /// @param to The receiver of funds. Not necessarily the dapp / the receiver of the transaction
-    /// @dev The to parameter is used for address screening purposes
-    /// @param token The ERC20 token address
-    /// @param value The value parameter associated to the transaction
-    function requireErc20TransferCompliance(
-        address from,
-        address to,
-        address token,
-        uint256 value
-    ) internal returns (bytes32) {
-        payFees(from, token, value);
-        return compliance.consumeCompliance(
-            compliance.computeErc20TransferPartialHash(block.chainid, msg.sig, from, to, token, value)
-        );
-    }
-
-    /// @notice Requires compliance for an ERC20 transfer
-    /// @param from The sender of funds. Not necessarily the msg.sender of the transaction
-    /// @dev The from parameter is used for address screening purposes
-    /// @param to The receiver of funds. Not necessarily the dapp / the receiver of the transaction
-    /// @dev The to parameter is used for address screening purposes
-    /// @param token The ERC20 token address
-    /// @param value The value parameter associated to the transaction
-    /// @param data Any data associated to the transaction that isn't already included, but uniquely identifies the
-    ///             transaction. e.g. an invoice ID
-    function requireErc20TransferAndDataCompliance(
-        address from,
-        address to,
-        address token,
-        uint256 value,
-        bytes memory data
-    ) internal returns (bytes32) {
-        payFees(from, token, value);
-        return compliance.consumeCompliance(
-            compliance.computeErc20TransferWithDataPartialHash(block.chainid, msg.sig, from, to, token, value, data)
-        );
-    }
-
-    function payFees(address from, address currency, uint256 value) private {
-        uint256 fee = value - compliance.getNetAmount(value);
-        if (currency == address(0)) {
-            compliance.payFees{value: fee}(currency, fee);
-        } else {
-            bool sent;
-            if (from == address(this))
-                sent = IERC20Securely(currency).transfer(address(compliance), fee);
-            else
-                sent = IERC20Securely(currency).transferFrom(from, address(compliance), fee);
-            require(sent, "Unable to transfer tokens");
-            compliance.payFees(currency, fee);
-        }
+    function requireCompliance() internal {
+        compliance.requireCompliance(msg.sender, msg.value, msg.data);
     }
 }
