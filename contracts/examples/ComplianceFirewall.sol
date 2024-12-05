@@ -2,7 +2,7 @@
 pragma solidity ^0.8;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {CompliantContract} from "../CompliantContract.sol";
+import {CompliantContract, ICompliance} from "../CompliantContract.sol";
 
 /// @title ComplianceFirewall
 /// @author Securely.id
@@ -10,15 +10,13 @@ import {CompliantContract} from "../CompliantContract.sol";
 contract ComplianceFirewall is CompliantContract {
     constructor(address compliance) CompliantContract(compliance) {}
 
-    /// @dev Sends orphan ethers to the default destination
-    receive() external payable {
-        payEthers(payable(address(0)));
-    }
-
     /// @notice Pay native ethers to a recipient
     /// @param destination The recipient address
     function payEthers(address payable destination) public payable {
-        requireEthTransferCompliance(msg.sender, destination, msg.value);
+        address[] memory addresses = new address[](2);
+        addresses[0] = msg.sender;
+        addresses[1] = destination;
+        requireCompliance(addresses);
         (bool sent, ) = destination.call{value: msg.value}("");
         require(sent, "Unable to pay ethers");
     }
@@ -28,7 +26,12 @@ contract ComplianceFirewall is CompliantContract {
     /// @param token The ERC20 token address
     /// @param amount The amount of tokens to pay
     function payTokens(address destination, address token, uint256 amount) external {
-        requireErc20TransferCompliance(tx.origin, destination, token, amount);
+        address[] memory addresses = new address[](2);
+        addresses[0] = msg.sender;
+        addresses[1] = destination;
+        ICompliance.Value[] memory values = new ICompliance.Value[](1);
+        values[0] = ICompliance.Value(token, amount);
+        requireCompliance(addresses, values);
         bool sent = IERC20(token).transferFrom(msg.sender, destination, amount);
         require(sent, "Unable to pay tokens");
     }

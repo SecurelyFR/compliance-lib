@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8;
 
+import {ICompliance} from "./ICompliance.sol";
+
 /// @title Securely's Compliance Oracle interface
 /// @author Securely.id
 /// @notice Simplified Compliance interface for compliance checks
@@ -9,10 +11,6 @@ pragma solidity ^0.8;
 /// @dev A full hash is a truly unique hash, that combines the partial hash and the timestamp at which the compliance
 ///      was registered. Used in events only, for easy compliance history tracking.
 interface IComplianceOracle {
-    /// @notice The different pools of transactions
-    /// @dev This gives every transaction a unique partial hash even if the parameters collide
-    enum Pool {GenericCall, EthTransfer, EthTransferWithData, Erc20Transfer, Erc20TransferWithData}
-
     /// @notice The different statuses of a transaction
     enum Status {Approved, Expired, NotFound, Pending, Rejected}
 
@@ -29,106 +27,17 @@ interface IComplianceOracle {
     event ComplianceVerdict(address indexed dapp, bytes32 indexed fullHash, bool approved);
     event ComplianceConsumed(address indexed dapp, bytes32 indexed fullHash, string complianceDetails);
 
-    /// @notice Gets the compliance status of a transaction
+    /// @notice Registers a compliance
     /// @param dapp The dapp address
     /// @param partialHash The partial hash of the transaction
-    /// @return status the status of the transaction
-    function getStatus(address dapp, bytes32 partialHash) external view returns (Status);
-
-    /// @notice Computes a partial hash based on a compliant generic call transaction's parameters
-    /// @param chainid The chain id. This is included so the partial hash is unique across chains
-    /// @param functionSelector The function selector of the transaction
-    /// @param from The sender of the transaction
-    /// @dev The from parameter is used for address screening purposes
-    /// @param value The value parameter associated to the transaction
-    /// @param data The optional data parameter associated to the transaction
-    /// @return partialHash The partial hash of the transaction
-    function computeGenericCallPartialHash(
-        uint256 chainid,
-        bytes4 functionSelector,
-        address from,
-        uint256 value,
-        bytes memory data
-    ) external pure returns (bytes32 partialHash);
-
-    /// @notice Computes a partial hash based on a compliant Ether transfer transaction's parameters
-    /// @param chainid The chain id. This is included so the partial hash is unique across chains
-    /// @param functionSelector The function selector of the transaction
-    /// @param from The sender of funds. Not necessarily the msg.sender of the transaction
-    /// @dev The from parameter is used for address screening purposes
-    /// @param to The receiver of funds. Not necessarily the dapp / the receiver of the transaction
-    /// @dev The to parameter is used for address screening purposes
-    /// @param value The ether amount to transfer
-    /// @return partialHash The partial hash of the transaction
-    function computeEthTransferPartialHash(
-        uint256 chainid,
-        bytes4 functionSelector,
-        address from,
-        address to,
-        uint256 value
-    ) external pure returns (bytes32 partialHash);
-
-    /// @notice Computes a partial hash based on a compliant Ether transfer transaction's parameters and a bonus data
-    ///         field
-    /// @param chainid The chain id. This is included so the partial hash is unique across chains
-    /// @param functionSelector The function selector of the transaction
-    /// @param from The sender of funds. Not necessarily the msg.sender of the transaction
-    /// @dev The from parameter is used for address screening purposes
-    /// @param to The receiver of funds. Not necessarily the dapp / the receiver of the transaction
-    /// @dev The to parameter is used for address screening purposes
-    /// @param value The ether amount to transfer
-    /// @param data Any data associated to the transaction that isn't already included, but uniquely identifies the
-    ///             transaction. e.g. an invoice ID
-    /// @return partialHash The partial hash of the transaction
-    function computeEthTransferWithDataPartialHash(
-        uint256 chainid,
-        bytes4 functionSelector,
-        address from,
-        address to,
-        uint256 value,
-        bytes memory data
-    ) external pure returns (bytes32 partialHash);
-
-    /// @notice Computes a partial hash based on a compliant Ether transfer transaction's parameters and a bonus data
-    ///         field
-    /// @param chainid The chain id. This is included so the partial hash is unique across chains
-    /// @param functionSelector The function selector of the transaction
-    /// @param from The sender of funds. Not necessarily the msg.sender of the transaction
-    /// @dev The from parameter is used for address screening purposes
-    /// @param to The receiver of funds. Not necessarily the dapp / the receiver of the transaction
-    /// @dev The to parameter is used for address screening purposes
-    /// @param value The ether amount to transfer
-    /// @return partialHash The partial hash of the transaction
-    function computeErc20TransferPartialHash(
-        uint256 chainid,
-        bytes4 functionSelector,
-        address from,
-        address to,
-        address token,
-        uint256 value
-    ) external pure returns (bytes32 partialHash);
-
-    /// @notice Computes a partial hash based on a compliant Ether transfer transaction's parameters and a bonus data
-    ///         field
-    /// @param chainid The chain id. This is included so the partial hash is unique across chains
-    /// @param functionSelector The function selector of the transaction
-    /// @param from The sender of funds. Not necessarily the msg.sender of the transaction
-    /// @dev The from parameter is used for address screening purposes
-    /// @param to The receiver of funds. Not necessarily the dapp / the receiver of the transaction
-    /// @dev The to parameter is used for address screening purposes
-    /// @param value The ether amount to transfer
-    /// @param data Any data associated to the transaction that isn't already included, but uniquely identifies the
-    ///             transaction. e.g. an invoice ID
-    /// @return partialHash The partial hash of the transaction
-    function computeErc20TransferWithDataPartialHash(
-        uint256 chainid,
-        bytes4 functionSelector,
-        address from,
-        address to,
-        address token,
-        uint256 value,
-        bytes memory data
-    ) external pure returns (bytes32 partialHash);
+    /// @param requiresApproval Whether the transaction requires manual approval from the dapp or not
+    /// @param complianceDetails The compliance details
+    function registerHash(
+        address dapp,
+        bytes32 partialHash,
+        bool requiresApproval,
+        string calldata complianceDetails
+    ) external;
 
     /// @notice Issues a verdict on a compliance
     /// @dev Used by the controller only
@@ -137,4 +46,62 @@ interface IComplianceOracle {
     /// @param partialHash The partial hash of the transaction
     /// @param approved The verdict
     function issueVerdict(address dapp, bytes32 partialHash, bool approved) external;
+
+    /// @notice Gets the compliance status of a transaction
+    /// @param dapp The dapp address
+    /// @param partialHash The partial hash of the transaction
+    /// @return status the status of the transaction
+    function getStatus(address dapp, bytes32 partialHash) external view returns (Status);
+
+    /// @notice Computes a partial hash based on a transaction's parameters
+    /// @param sender The msg.sender of the transaction
+    /// @param value The msg.value of the transaction
+    /// @param data The msg.data of the transaction
+    /// @param screening The list of addresses used in ICompliance.requireCompliance
+    /// @param values The list of values used in ICompliance.requireCompliance
+    /// @return partialHash The partial hash of the transaction
+    function computePartialHash(
+        address sender,
+        uint256 value,
+        bytes calldata data,
+        address[] memory screening,
+        ICompliance.Value[] memory values
+    ) external view returns (bytes32 partialHash);
+
+    /// @notice Computes a partial hash based on a transaction's parameters
+    /// @param sender The msg.sender of the transaction
+    /// @param value The msg.value of the transaction
+    /// @param data The msg.data of the transaction
+    /// @param screening The list of addresses used in ICompliance.requireCompliance
+    /// @return partialHash The partial hash of the transaction
+    function computePartialHash(
+        address sender,
+        uint256 value,
+        bytes calldata data,
+        address[] memory screening
+    ) external view returns (bytes32 partialHash);
+
+    /// @notice Computes a partial hash based on a transaction's parameters
+    /// @param sender The msg.sender of the transaction
+    /// @param value The msg.value of the transaction
+    /// @param data The msg.data of the transaction
+    /// @param values The list of values used in ICompliance.requireCompliance
+    /// @return partialHash The partial hash of the transaction
+    function computePartialHash(
+        address sender,
+        uint256 value,
+        bytes calldata data,
+        ICompliance.Value[] memory values
+    ) external view returns (bytes32 partialHash);
+
+    /// @notice Computes a partial hash based on a transaction's parameters
+    /// @param sender The msg.sender of the transaction
+    /// @param value The msg.value of the transaction
+    /// @param data The msg.data of the transaction
+    /// @return partialHash The partial hash of the transaction
+    function computePartialHash(
+        address sender,
+        uint256 value,
+        bytes calldata data
+    ) external view returns (bytes32 partialHash);
 }
