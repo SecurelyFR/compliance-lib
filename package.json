@@ -4,7 +4,9 @@
   "version": "1.0.8",
   "main": "index.js",
   "scripts": {
-    "build": "node build.js"
+    "compile": "hardhat compile",
+    "build": "mkdir -p dist && npm run compile && node build.js",
+    "clean": "rm -rf dist artifacts cache"
   },
   "files": [
     "dist",
@@ -32,12 +34,11 @@
   },
   "homepage": "https://securely.id",
   "dependencies": {
-    "@openzeppelin/contracts": "^5.1.0",
-    "fs": "0.0.1-security",
-    "path": "^0.12.7"
+    "@openzeppelin/contracts": "^5.0.0"
   },
   "devDependencies": {
-    "browserify": "^17.0.0",
-    "hardhat": "^2.22.5"
+    "browserify": "^17.0.1",
+    "hardhat": "^2.22.17",
+    "path": "^0.12.7"
   }
 }
