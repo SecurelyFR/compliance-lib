@@ -28,26 +28,27 @@ abstract contract CompliantContract {
     }
 
     /// @notice Requires compliance for a transaction
-    /// @param screening An array of addresses that should be available in the policy
-    /// @param values An array of token/amount that should be available in the policy
+    /// @param wallets An array of addresses that will be verified by the policy
+    /// @param amounts An array of token/amount that will be verified by the policy
     /// @dev Use 0x0 as a token address for native ETH
-    function requireCompliance(address[] memory screening, ICompliance.Value[] memory values) internal {
-        compliance.requireCompliance(msg.sender, msg.value, msg.data, screening, values);
+    function requireCompliance(address[] memory wallets, ICompliance.Amount[] memory amounts) internal {
+        compliance.requireCompliance(msg.sender, msg.value, msg.data, wallets, amounts);
     }
 
     /// @notice Requires compliance for a transaction
-    /// @param values An array of token/amount that should be available in the policy
+    /// @param amounts An array of token/amount that will be verified by the policy
     /// @dev Use 0x0 as a token address for native ETH
-    function requireCompliance(ICompliance.Value[] memory values) internal {
-        compliance.requireCompliance(msg.sender, msg.value, msg.data, values);
+    function requireCompliance(ICompliance.Amount[] memory amounts) internal {
+        compliance.requireCompliance(msg.sender, msg.value, msg.data, amounts);
     }
 
     /// @notice Requires compliance for a transaction
-    /// @param screening An array of addresses that should be available in the policy
-    function requireCompliance(address[] memory screening) internal {
-        compliance.requireCompliance(msg.sender, msg.value, msg.data, screening);
+    /// @param wallets An array of addresses that will be verified by the policy
+    function requireCompliance(address[] memory wallets) internal {
+        compliance.requireCompliance(msg.sender, msg.value, msg.data, wallets);
     }
 
+    /// @notice Requires compliance for a transaction
     function requireCompliance() internal {
         compliance.requireCompliance(msg.sender, msg.value, msg.data);
     }
