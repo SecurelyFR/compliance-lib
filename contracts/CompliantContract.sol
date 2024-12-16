@@ -6,7 +6,7 @@ import {ICompliance} from "./interfaces/ICompliance.sol";
 /// @title Securely's Compliance Library
 /// @author Securely.id
 /// @notice This contract provides tools to enforce compliance rules
-/// @dev Either use checkCompliance->finalizeCompliance or directly requireCompliance
+/// @dev Either use checkComplianceStatus->requireCompliance or directly requireCompliance
 abstract contract CompliantContract {
     /// @notice The Securely compliance contract address. It must be set before using the require functions.
     /// @dev This contract is set by the owner and must implement the ICompliance interface.
@@ -31,52 +31,26 @@ abstract contract CompliantContract {
     /// @param wallets An array of addresses that will be verified by the policy
     /// @param amounts An array of token/amount that will be verified by the policy
     /// @dev Use 0x0 as a token address for native ETH
-    function checkCompliance(address[] memory wallets, ICompliance.Amount[] memory amounts) internal returns (bool) {
-        return compliance.checkCompliance(msg.sender, msg.value, msg.data, wallets, amounts);
+    function checkComplianceStatus(address[] memory wallets, ICompliance.Amount[] memory amounts) internal returns (bool) {
+        return compliance.checkComplianceStatus(msg.sender, msg.value, msg.data, wallets, amounts);
     }
 
     /// @notice Checks compliance for a transaction
     /// @param amounts An array of token/amount that will be verified by the policy
     /// @dev Use 0x0 as a token address for native ETH
-    function checkCompliance(ICompliance.Amount[] memory amounts) internal returns (bool) {
-        return compliance.checkCompliance(msg.sender, msg.value, msg.data, amounts);
+    function checkComplianceStatus(ICompliance.Amount[] memory amounts) internal returns (bool) {
+        return compliance.checkComplianceStatus(msg.sender, msg.value, msg.data, amounts);
     }
 
     /// @notice Checks compliance for a transaction
     /// @param wallets An array of addresses that will be verified by the policy
-    function checkCompliance(address[] memory wallets) internal returns (bool) {
-        return compliance.checkCompliance(msg.sender, msg.value, msg.data, wallets);
+    function checkComplianceStatus(address[] memory wallets) internal returns (bool) {
+        return compliance.checkComplianceStatus(msg.sender, msg.value, msg.data, wallets);
     }
 
     /// @notice Checks compliance for a transaction
-    function checkCompliance() internal returns (bool) {
-        return compliance.checkCompliance(msg.sender, msg.value, msg.data);
-    }
-
-    /// @notice Finalizes compliance for a transaction
-    /// @param wallets An array of addresses that will be verified by the policy
-    /// @param amounts An array of token/amount that will be verified by the policy
-    /// @dev Use 0x0 as a token address for native ETH
-    function finalizeCompliance(address[] memory wallets, ICompliance.Amount[] memory amounts) internal {
-        compliance.finalizeCompliance(msg.sender, msg.value, msg.data, wallets, amounts);
-    }
-
-    /// @notice Finalizes compliance for a transaction
-    /// @param amounts An array of token/amount that will be verified by the policy
-    /// @dev Use 0x0 as a token address for native ETH
-    function finalizeCompliance(ICompliance.Amount[] memory amounts) internal {
-        compliance.finalizeCompliance(msg.sender, msg.value, msg.data, amounts);
-    }
-
-    /// @notice Finalizes compliance for a transaction
-    /// @param wallets An array of addresses that will be verified by the policy
-    function finalizeCompliance(address[] memory wallets) internal {
-        compliance.finalizeCompliance(msg.sender, msg.value, msg.data, wallets);
-    }
-
-    /// @notice Finalizes compliance for a transaction
-    function finalizeCompliance() internal {
-        compliance.finalizeCompliance(msg.sender, msg.value, msg.data);
+    function checkComplianceStatus() internal returns (bool) {
+        return compliance.checkComplianceStatus(msg.sender, msg.value, msg.data);
     }
 
     /// @notice Requires compliance for a transaction
@@ -84,24 +58,24 @@ abstract contract CompliantContract {
     /// @param amounts An array of token/amount that will be verified by the policy
     /// @dev Use 0x0 as a token address for native ETH
     function requireCompliance(address[] memory wallets, ICompliance.Amount[] memory amounts) internal {
-        finalizeCompliance(wallets, amounts);
+        compliance.requireCompliance(msg.sender, msg.value, msg.data, wallets, amounts);
     }
 
     /// @notice Requires compliance for a transaction
     /// @param amounts An array of token/amount that will be verified by the policy
     /// @dev Use 0x0 as a token address for native ETH
     function requireCompliance(ICompliance.Amount[] memory amounts) internal {
-        finalizeCompliance(amounts);
+        compliance.requireCompliance(msg.sender, msg.value, msg.data, amounts);
     }
 
     /// @notice Requires compliance for a transaction
     /// @param wallets An array of addresses that will be verified by the policy
     function requireCompliance(address[] memory wallets) internal {
-        finalizeCompliance(wallets);
+        compliance.requireCompliance(msg.sender, msg.value, msg.data, wallets);
     }
 
     /// @notice Requires compliance for a transaction
     function requireCompliance() internal {
-        finalizeCompliance();
+        compliance.requireCompliance(msg.sender, msg.value, msg.data);
     }
 }

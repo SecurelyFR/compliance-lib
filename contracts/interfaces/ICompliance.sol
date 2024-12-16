@@ -23,7 +23,7 @@ interface ICompliance {
     /// @dev There might be more addresses, labeled in the policy as WALLET3, WALLET4, ...
     /// @param amounts An array of token/amount that will be verified by the policy
     /// @dev Use 0x0 as a token address for native ETH
-    function checkCompliance(
+    function checkComplianceStatus(
         address sender,
         uint256 value,
         bytes calldata data,
@@ -39,7 +39,7 @@ interface ICompliance {
     /// @dev The first screening address is a source address
     /// @dev The optional second screening address is a destination address
     /// @dev There might be more addresses, labeled in the policy as WALLET3, WALLET4, ...
-    function checkCompliance(
+    function checkComplianceStatus(
         address sender,
         uint256 value,
         bytes calldata data,
@@ -52,7 +52,7 @@ interface ICompliance {
     /// @param data The msg.data of the transaction
     /// @param amounts An array of token/amount that will be verified by the policy
     /// @dev Use 0x0 as a token address for native ETH
-    function checkCompliance(
+    function checkComplianceStatus(
         address sender,
         uint256 value,
         bytes calldata data,
@@ -63,9 +63,13 @@ interface ICompliance {
     /// @param sender The msg.sender of the transaction
     /// @param value The msg.value of the transaction
     /// @param data The msg.data of the transaction
-    function checkCompliance(address sender, uint256 value, bytes calldata data) external returns (bool isCompliant);
+    function checkComplianceStatus(
+        address sender,
+        uint256 value,
+        bytes calldata data
+    ) external returns (bool isCompliant);
 
-    /// @notice Finalizes compliance for a transaction
+    /// @notice Requires compliance for a transaction
     /// @dev reverts if the transaction is not compliant
     /// @param sender The msg.sender of the transaction
     /// @param value The msg.value of the transaction
@@ -76,7 +80,7 @@ interface ICompliance {
     /// @dev There might be more addresses, labeled in the policy as WALLET3, WALLET4, ...
     /// @param amounts An array of token/amount that will be verified by the policy
     /// @dev Use 0x0 as a token address for native ETH
-    function finalizeCompliance(
+    function requireCompliance(
         address sender,
         uint256 value,
         bytes calldata data,
@@ -84,7 +88,7 @@ interface ICompliance {
         Amount[] memory amounts
     ) external;
 
-    /// @notice Finalizes compliance for a transaction
+    /// @notice Requires compliance for a transaction
     /// @dev reverts if the transaction is not compliant
     /// @param sender The msg.sender of the transaction
     /// @param value The msg.value of the transaction
@@ -93,21 +97,21 @@ interface ICompliance {
     /// @dev The first screening address is a source address
     /// @dev The optional second screening address is a destination address
     /// @dev There might be more addresses, labeled in the policy as WALLET3, WALLET4, ...
-    function finalizeCompliance(address sender, uint256 value, bytes calldata data, address[] memory wallets) external;
+    function requireCompliance(address sender, uint256 value, bytes calldata data, address[] memory wallets) external;
 
-    /// @notice Finalizes compliance for a transaction
+    /// @notice Requires compliance for a transaction
     /// @dev reverts if the transaction is not compliant
     /// @param sender The msg.sender of the transaction
     /// @param value The msg.value of the transaction
     /// @param data The msg.data of the transaction
     /// @param amounts An array of token/amount that will be verified by the policy
     /// @dev Use 0x0 as a token address for native ETH
-    function finalizeCompliance(address sender, uint256 value, bytes calldata data, Amount[] memory amounts) external;
+    function requireCompliance(address sender, uint256 value, bytes calldata data, Amount[] memory amounts) external;
 
-    /// @notice Finalizes compliance for a transaction
+    /// @notice Requires compliance for a transaction
     /// @dev reverts if the transaction is not compliant
     /// @param sender The msg.sender of the transaction
     /// @param value The msg.value of the transaction
     /// @param data The msg.data of the transaction
-    function finalizeCompliance(address sender, uint256 value, bytes calldata data) external;
+    function requireCompliance(address sender, uint256 value, bytes calldata data) external;
 }
