@@ -83,7 +83,7 @@ contract CompliantTreasury is CompliantContract {
     /// @param value The amount of eth/tokens transferred
     function _receive(address currency, uint256 value) virtual internal {
         if (currency == address(0))
-            require(value == msg.value);
+            require(value == msg.value, "msg.value and value arg must match");
         else
             IERC20(currency).transferFrom(msg.sender, address(this), value);
     }
@@ -98,7 +98,7 @@ contract CompliantTreasury is CompliantContract {
             (sent, ) = destination.call{value: value}("");
         else
             sent = IERC20(currency).transfer(destination, value);
-        require(sent);
+        require(sent, "Transfer failed");
     }
 
     /// @notice Move funds from an internal account to another internal account
@@ -107,9 +107,9 @@ contract CompliantTreasury is CompliantContract {
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
     /// @param value The amount of eth/tokens transferred
     function _move(address source, address destination, address currency, uint256 value) virtual internal {
-        require(value > 0);
+        require(value > 0, "Can't move a 0 value");
         if (source != address(this)) {
-            require(_treasury[source][currency] >= value);
+            require(_treasury[source][currency] >= value, "Insufficient funds in the treasury");
             _treasury[source][currency] -= value;
         }
         if (destination != address(this))
