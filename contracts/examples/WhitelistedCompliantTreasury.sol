@@ -40,7 +40,7 @@ contract WhitelistedCompliantTreasury is AccessControl, CompliantTreasury {
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
     function transfer(address destination, address currency, uint256 amount) virtual public override {
         if (!hasRole(WHITELISTED_ROLE, msg.sender))
-            _requireTransferCompliance(msg.sender, msg.sender, currency, amount);
+            _requireTransferCompliance(msg.sender, destination, currency, amount);
         _move(msg.sender, destination, currency, amount);
         emit Transfer(msg.sender, destination, currency, amount);
     }
