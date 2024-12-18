@@ -22,7 +22,7 @@ contract WhitelistedCompliantTreasury is AccessControl, CompliantTreasury {
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
     /// @param value The amount of eth/tokens to pay
     function pay(address destination, address currency, uint256 value) virtual public payable override {
-        require(!hasRole(WHITELISTED_ROLE, msg.sender));
+        require(!hasRole(WHITELISTED_ROLE, msg.sender), "Whitelisted users need to use transfer instead");
         super.pay(destination, currency, value);
     }
 
@@ -30,7 +30,7 @@ contract WhitelistedCompliantTreasury is AccessControl, CompliantTreasury {
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
     /// @param value The amount of eth/tokens to deposit
     function withdraw(address currency, uint256 value) virtual public override {
-        require(!hasRole(WHITELISTED_ROLE, msg.sender));
+        require(!hasRole(WHITELISTED_ROLE, msg.sender), "Whitelisted can't withdraw because they are self-custodial");
         super.withdraw(currency, value);
     }
 
