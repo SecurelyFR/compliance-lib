@@ -24,15 +24,15 @@ contract ComplianceFirewall is CompliantContract {
     /// @notice Pay ERC20 tokens to a recipient
     /// @param destination The recipient address
     /// @param token The ERC20 token address
-    /// @param amount The amount of tokens to pay
-    function payTokens(address destination, address token, uint256 amount) external {
+    /// @param value The amount of tokens to pay
+    function payTokens(address destination, address token, uint256 value) external {
         address[] memory addresses = new address[](2);
         addresses[0] = msg.sender;
         addresses[1] = destination;
-        ICompliance.Value[] memory values = new ICompliance.Value[](1);
-        values[0] = ICompliance.Value(token, amount);
-        requireCompliance(addresses, values);
-        bool sent = IERC20(token).transferFrom(msg.sender, destination, amount);
+        ICompliance.Amount[] memory amounts = new ICompliance.Amount[](1);
+        amounts[0] = ICompliance.Amount(token, value);
+        requireCompliance(addresses, amounts);
+        bool sent = IERC20(token).transferFrom(msg.sender, destination, value);
         require(sent, "Unable to pay tokens");
     }
 }

@@ -20,41 +20,41 @@ contract WhitelistedCompliantTreasury is AccessControl, CompliantTreasury {
     /// @notice Pay funds to an account in the treasury
     /// @param destination The account receiving funds in the treasury. Equals to msg.sender when it's a deposit
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
-    /// @param amount The amount of eth/tokens to pay
-    function pay(address destination, address currency, uint256 amount) virtual public payable override {
+    /// @param value The amount of eth/tokens to pay
+    function pay(address destination, address currency, uint256 value) virtual public payable override {
         require(!hasRole(WHITELISTED_ROLE, msg.sender));
-        super.pay(destination, currency, amount);
+        super.pay(destination, currency, value);
     }
 
     /// @notice Withdraw funds from the treasury
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
-    /// @param amount The amount of eth/tokens to deposit
-    function withdraw(address currency, uint256 amount) virtual public override {
+    /// @param value The amount of eth/tokens to deposit
+    function withdraw(address currency, uint256 value) virtual public override {
         require(!hasRole(WHITELISTED_ROLE, msg.sender));
-        super.withdraw(currency, amount);
+        super.withdraw(currency, value);
     }
 
     /// @notice Transfer funds from the treasury to a recipient
     /// @param destination The recipient address
-    /// @param amount The amount of tokens to transfer. Use 0 to transfer all
+    /// @param value The amount of tokens to transfer. Use 0 to transfer all
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
-    function transfer(address destination, address currency, uint256 amount) virtual public override {
+    function transfer(address destination, address currency, uint256 value) virtual public override {
         if (!hasRole(WHITELISTED_ROLE, msg.sender))
-            _requireTransferCompliance(msg.sender, destination, currency, amount);
-        _move(msg.sender, destination, currency, amount);
-        emit Transfer(msg.sender, destination, currency, amount);
+            _requireTransferCompliance(msg.sender, destination, currency, value);
+        _move(msg.sender, destination, currency, value);
+        emit Transfer(msg.sender, destination, currency, value);
     }
 
     /// @notice Move funds from an internal account to another internal account
     /// @param source The internal account sending the funds
     /// @param destination The internal account receiving the funds
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
-    /// @param amount The amount of eth/tokens transferred
-    function _move(address source, address destination, address currency, uint256 amount) virtual internal override {
+    /// @param value The amount of eth/tokens transferred
+    function _move(address source, address destination, address currency, uint256 value) virtual internal override {
         if (hasRole(WHITELISTED_ROLE, source))
-            _receive(currency, amount);
-        super._move(source, destination, currency, amount);
+            _receive(currency, value);
+        super._move(source, destination, currency, value);
         if (hasRole(WHITELISTED_ROLE, destination))
-            _send(destination, currency, amount);
+            _send(destination, currency, value);
     }
 }

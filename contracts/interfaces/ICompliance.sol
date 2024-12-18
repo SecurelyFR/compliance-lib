@@ -8,7 +8,7 @@ pragma solidity ^0.8;
 interface ICompliance {
     /// @member token The ERC20 token used. Use 0x0 for native ethers
     /// @member value The amount of tokens/wei
-    struct Value {
+    struct Amount {
         address token;
         uint256 value;
     }
@@ -17,35 +17,37 @@ interface ICompliance {
     /// @param sender The msg.sender of the transaction
     /// @param value The msg.value of the transaction
     /// @param data The msg.data of the transaction
-    /// @param screening A list of addresses to screen
+    /// @param wallets An array of addresses that will be verified by the policy
     /// @dev The first screening address is a source address
     /// @dev The optional second screening address is a destination address
-    /// @dev There might be more addresses, labeled in the policy as SCREENING3, SCREENING4, ...
-    /// @param values An array of token/value to check in the policy
+    /// @dev There might be more addresses, labeled in the policy as WALLET3, WALLET4, ...
+    /// @param amounts An array of token/amount that will be verified by the policy
+    /// @dev Use 0x0 as a token address for native ETH
     function requireCompliance(
         address sender,
         uint256 value,
         bytes calldata data,
-        address[] memory screening,
-        Value[] memory values
+        address[] memory wallets,
+        Amount[] memory amounts
     ) external;
 
     /// @notice Requires compliance for a transaction
     /// @param sender The msg.sender of the transaction
     /// @param value The msg.value of the transaction
     /// @param data The msg.data of the transaction
-    /// @param screening A list of addresses to screen
+    /// @param wallets An array of addresses that will be verified by the policy
     /// @dev The first screening address is a source address
     /// @dev The optional second screening address is a destination address
-    /// @dev There might be more addresses, labeled in the policy as SCREENING3, SCREENING4, ...
-    function requireCompliance(address sender, uint256 value, bytes calldata data, address[] memory screening) external;
+    /// @dev There might be more addresses, labeled in the policy as WALLET3, WALLET4, ...
+    function requireCompliance(address sender, uint256 value, bytes calldata data, address[] memory wallets) external;
 
     /// @notice Requires compliance for a transaction
     /// @param sender The msg.sender of the transaction
     /// @param value The msg.value of the transaction
     /// @param data The msg.data of the transaction
-    /// @param values An array of token/value to check in the policy
-    function requireCompliance(address sender, uint256 value, bytes calldata data, Value[] memory values) external;
+    /// @param amounts An array of token/amount that will be verified by the policy
+    /// @dev Use 0x0 as a token address for native ETH
+    function requireCompliance(address sender, uint256 value, bytes calldata data, Amount[] memory amounts) external;
 
     /// @notice Requires compliance for a transaction
     /// @param sender The msg.sender of the transaction

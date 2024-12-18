@@ -57,41 +57,42 @@ interface IComplianceOracle {
     /// @param sender The msg.sender of the transaction
     /// @param value The msg.value of the transaction
     /// @param data The msg.data of the transaction
-    /// @param screening The list of addresses used in ICompliance.requireCompliance
-    /// @param values The list of values used in ICompliance.requireCompliance
+    /// @param wallets The list of addresses used in ICompliance.requireCompliance
+    /// @param amounts The list of amounts used in ICompliance.requireCompliance
+    /// @dev Use 0x0 as a token address for native ETH
     /// @return partialHash The partial hash of the transaction
     function computePartialHash(
         address sender,
         uint256 value,
         bytes calldata data,
-        address[] memory screening,
-        ICompliance.Value[] memory values
+        address[] memory wallets,
+        ICompliance.Amount[] memory amounts
     ) external view returns (bytes32 partialHash);
 
     /// @notice Computes a partial hash based on a transaction's parameters
     /// @param sender The msg.sender of the transaction
     /// @param value The msg.value of the transaction
     /// @param data The msg.data of the transaction
-    /// @param screening The list of addresses used in ICompliance.requireCompliance
+    /// @param wallets The list of addresses used in ICompliance.requireCompliance
     /// @return partialHash The partial hash of the transaction
     function computePartialHash(
         address sender,
         uint256 value,
         bytes calldata data,
-        address[] memory screening
+        address[] memory wallets
     ) external view returns (bytes32 partialHash);
 
     /// @notice Computes a partial hash based on a transaction's parameters
     /// @param sender The msg.sender of the transaction
     /// @param value The msg.value of the transaction
     /// @param data The msg.data of the transaction
-    /// @param values The list of values used in ICompliance.requireCompliance
+    /// @param amounts The list of amounts used in ICompliance.requireCompliance
     /// @return partialHash The partial hash of the transaction
     function computePartialHash(
         address sender,
         uint256 value,
         bytes calldata data,
-        ICompliance.Value[] memory values
+        ICompliance.Amount[] memory amounts
     ) external view returns (bytes32 partialHash);
 
     /// @notice Computes a partial hash based on a transaction's parameters
