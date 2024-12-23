@@ -29,7 +29,7 @@ interface ICompliance {
         bytes calldata data,
         address[] memory wallets,
         Amount[] memory amounts
-    ) external returns (bool isCompliant);
+    ) external view returns (bool isCompliant);
 
     /// @notice Checks compliance for a transaction
     /// @param sender The msg.sender of the transaction
@@ -44,7 +44,7 @@ interface ICompliance {
         uint256 value,
         bytes calldata data,
         address[] memory wallets
-    ) external returns (bool isCompliant);
+    ) external view returns (bool isCompliant);
 
     /// @notice Checks compliance for a transaction
     /// @param sender The msg.sender of the transaction
@@ -57,7 +57,7 @@ interface ICompliance {
         uint256 value,
         bytes calldata data,
         Amount[] memory amounts
-    ) external returns (bool isCompliant);
+    ) external view returns (bool isCompliant);
 
     /// @notice Checks compliance for a transaction
     /// @param sender The msg.sender of the transaction
@@ -67,7 +67,7 @@ interface ICompliance {
         address sender,
         uint256 value,
         bytes calldata data
-    ) external returns (bool isCompliant);
+    ) external view returns (bool isCompliant);
 
     /// @notice Requires compliance for a transaction
     /// @dev reverts if the transaction is not compliant
