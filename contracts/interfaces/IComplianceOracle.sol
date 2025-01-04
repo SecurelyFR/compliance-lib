@@ -50,8 +50,9 @@ interface IComplianceOracle {
     /// @notice Gets the compliance status of a transaction
     /// @param dapp The dapp address
     /// @param partialHash The partial hash of the transaction
+    /// @param wallets The list of addresses used in ICompliance.requireCompliance
     /// @return status the status of the transaction
-    function getStatus(address dapp, bytes32 partialHash) external view returns (Status);
+    function getStatus(address dapp, bytes32 partialHash, address[] memory wallets) external view returns (Status);
 
     /// @notice Computes a partial hash based on a transaction's parameters
     /// @param sender The msg.sender of the transaction
