@@ -24,7 +24,7 @@ contract CompliantTreasury is CompliantContract {
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
     /// @param value The amount of eth/tokens to pay
     function pay(address destination, address currency, uint256 value) virtual public payable {
-        _requireTransferCompliance(msg.sender, destination, currency, value);
+        _requireTransferCompliance(destination, currency, value);
         _receive(currency, value);
         _move(address(this), destination, currency, value);
         emit Payment(msg.sender, destination, currency, value);
@@ -34,7 +34,7 @@ contract CompliantTreasury is CompliantContract {
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
     /// @param value The amount of eth/tokens to deposit
     function withdraw(address currency, uint256 value) virtual public {
-        _requireTransferCompliance(msg.sender, msg.sender, currency, value);
+        _requireTransferCompliance(msg.sender, currency, value);
         _move(msg.sender, address(this), currency, value);
         _send(msg.sender, currency, value);
         emit Withdrawal(msg.sender, currency, value);
@@ -45,7 +45,8 @@ contract CompliantTreasury is CompliantContract {
     /// @param value The value of tokens to transfer. Use 0 to transfer all
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
     function transfer(address destination, address currency, uint256 value) virtual public {
-        _requireTransferCompliance(msg.sender, destination, currency, value);
+        require(destination != msg.sender, "You can't transfer funds to yourself");
+        _requireTransferCompliance(destination, currency, value);
         _move(msg.sender, destination, currency, value);
         emit Transfer(msg.sender, destination, currency, value);
     }
@@ -58,24 +59,25 @@ contract CompliantTreasury is CompliantContract {
     }
 
     /// @notice requires compliance for eth or ERC20 transfer, based on the currency argument
-    /// @param source The sender of funds. Not necessarily the msg.sender of the transaction
     /// @dev The from parameter is used for address screening purposes
     /// @param destination The receiver of funds. Not necessarily the dapp / the receiver of the transaction
     /// @dev The to parameter is used for address screening purposes
     /// @param currency The ERC20 token address. Use 0x0 for native ethers
     /// @param value The amount of eth/tokens transferred
     function _requireTransferCompliance(
-        address source,
         address destination,
         address currency,
         uint256 value
     ) internal {
-        address[] memory addresses = new address[](2);
-        addresses[0] = source;
-        addresses[1] = destination;
         ICompliance.Amount[] memory amounts = new ICompliance.Amount[](1);
         amounts[0] = ICompliance.Amount(currency, value);
-        requireCompliance(addresses, amounts);
+        if (msg.sender == destination)
+            requireCompliance(amounts);
+        else {
+            address[] memory addresses = new address[](1);
+            addresses[0] = destination;
+            requireCompliance(addresses, amounts);
+        }
     }
 
     /// @notice Receive funds from the msg.sender into an internal account
